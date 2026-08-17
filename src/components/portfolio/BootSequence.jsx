@@ -21,22 +21,22 @@ const BOOT_LINES = [
 
 // Time to wait after each line finishes typing.
 const LINE_DELAYS = [
-  250,  // bootloader
-  200,  // CPU
-  100,  // Flash
-  150,  // PSRAM
-  250,  // SPIFFS
-  350,  // Wi-Fi
-  400,  // edge mesh
-  150,  // Brasov
-  100,  // Berlin
-  100,  // London
-  350,  // Tokyo
-  400,  // robot server
-  500,  // AI engine
-  400,  // sensors
-  350,  // portfolio
-  1000, // SYSTEM READY
+  150,  // bootloader
+  100,  // CPU
+  50,  // Flash
+  50,  // PSRAM
+  100,  // SPIFFS
+  100,  // Wi-Fi
+  150,  // edge mesh
+  50,  // Brasov
+  50,  // Berlin
+  50,  // London
+  100,  // Tokyo
+  150,  // robot server
+  200,  // AI engine
+  100,  // sensors
+  150,  // portfolio
+  500, // SYSTEM READY
 ];
 
 export function BootSequence({ onDone }) {
@@ -75,26 +75,20 @@ const getCharacterDelay = (character) => {
     return 8;
   }
 
-  // Main typing speed.
-  // Slower than before so individual letters are visible.
-  let delay = 175 + Math.random() * 40;
+  // 100–160ms between normal characters
+  let delay = 100 + Math.random() * 60;
 
-  // Small natural pause after spaces.
+  // Slightly longer pause after spaces
   if (character === " ") {
-    delay += 20 + Math.random() * 25;
+    delay += 30 + Math.random() * 40;
   }
 
-  // Slight hesitation after punctuation.
+  // Longer pause after punctuation
   if ([".", ",", ":", ";", "!"].includes(character)) {
-    delay += 60 + Math.random() * 80;
+    delay += 80 + Math.random() * 100;
   }
 
-  // Numbers can have a tiny variation.
-  if (/[0-9]/.test(character)) {
-    delay += Math.random() * 15;
-  }
-
-  return Math.max(40, delay);
+  return delay;
 };
 
     const typeLine = (lineIndex) => {
