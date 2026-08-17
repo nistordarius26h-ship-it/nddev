@@ -6,7 +6,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   // Relative base so the built assets resolve correctly no matter what
   // repo name / subpath GitHub Pages serves the site from.
-  base: './',
+  base: './nddev/',
   plugins: [react()],
   resolve: {
     alias: {
