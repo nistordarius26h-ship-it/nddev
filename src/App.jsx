@@ -5,7 +5,7 @@ import PageNotFound from "@/pages/PageNotFound";
 
 function App() {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
+    <Router basename={"/nddev"}>
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
