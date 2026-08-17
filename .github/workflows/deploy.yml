@@ -17,6 +17,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,6 +34,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Add a unique deployment version.
+      # This changes on every GitHub Actions build.
+      - name: Add deployment version
+        run: |
+          echo "Deployment: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > dist/version.txt
+          echo "Commit: $GITHUB_SHA" >> dist/version.txt
+
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -41,9 +49,11 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

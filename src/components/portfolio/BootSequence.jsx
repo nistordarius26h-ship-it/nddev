@@ -19,36 +19,50 @@ const BOOT_LINES = [
   "SYSTEM READY — revealing interface",
 ];
 
-// Time to wait after each line finishes typing.
-const LINE_DELAYS = [
-  150,  // bootloader
-  80,  // CPU
-  50,  // Flash
-  50,  // PSRAM
-  100,  // SPIFFS
-  150,  // Wi-Fi
-  150,  // edge mesh
-  50,  // Brasov
-  50,  // Berlin
-  50,  // London
-  150,  // Tokyo
-  100,  // robot server
-  200,  // AI engine
-  150,  // sensors
-  100,  // portfolio
-  600, // SYSTEM READY
+/*
+ * Total time spent typing the characters.
+ *
+ * This is intentionally independent of:
+ * - screen size
+ * - PC vs phone
+ * - CPU speed
+ * - browser timer speed
+ */
+const TOTAL_TYPING_TIME = 6000;
+
+/*
+ * Small pauses between completed lines.
+ * These are NOT part of the 6 second typing time.
+ */
+const LINE_PAUSES = [
+  180,
+  140,
+  120,
+  140,
+  180,
+  220,
+  300,
+  120,
+  120,
+  120,
+  220,
+  260,
+  320,
+  280,
+  220,
+  900,
 ];
 
 export function BootSequence({ onDone }) {
   const [lines, setLines] = useState([]);
   const [progress, setProgress] = useState(0);
-  const [fading, setFading] = useState(false);
-  const [cinematic, setCinematic] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [cinematic, setCinematic] = useState(false);
+  const [fading, setFading] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   const timers = useRef([]);
-  const typingTimer = useRef(null);
+  const animationFrame = useRef(null);
   const skipped = useRef(false);
 
   const clearTimers = () => {
@@ -58,161 +72,195 @@ export function BootSequence({ onDone }) {
 
     timers.current = [];
 
-    if (typingTimer.current) {
-      clearTimeout(typingTimer.current);
-      typingTimer.current = null;
+    if (animationFrame.current) {
+      cancelAnimationFrame(animationFrame.current);
+      animationFrame.current = null;
     }
   };
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
+    skipped.current = false;
 
-    // Natural character-by-character typing speed.
-const getCharacterDelay = (character) => {
-  if (reduceMotion) {
-    return 5;
-  }
+    let lineIndex = 0;
+    let startTime = null;
 
-  // Average: roughly 12–15ms per character.
-  let delay = 10 + Math.random() * 7;
+    /*
+     * Flatten the boot text into a single character timeline.
+     *
+     * Each character gets a position in the 6 second timeline.
+     */
+    const characterPositions = [];
 
-  // Small natural hesitation after spaces.
-  if (character === " ") {
-    delay += 4 + Math.random() * 5;
-  }
+    let totalCharacters = 0;
 
-  // Slight pause after punctuation.
-  if ([".", ",", ":", ";", "!"].includes(character)) {
-    delay += 10 + Math.random() * 12;
-  }
+    BOOT_LINES.forEach((line) => {
+      totalCharacters += line.length;
+    });
 
-  return delay;
-};
+    let currentCharacter = 0;
 
-    const typeLine = (lineIndex) => {
-      if (
-        skipped.current ||
-        lineIndex >= BOOT_LINES.length
-      ) {
+    BOOT_LINES.forEach((line, index) => {
+      const positions = [];
+
+      for (let i = 0; i < line.length; i++) {
+        positions.push({
+          character: i + 1,
+          time:
+            (currentCharacter / totalCharacters) *
+            TOTAL_TYPING_TIME,
+        });
+
+        currentCharacter++;
+      }
+
+      characterPositions.push({
+        lineIndex: index,
+        text: line,
+        positions,
+      });
+    });
+
+    /*
+     * Start with the first empty line.
+     */
+    setLines([""]);
+    setTyping(true);
+
+    const animate = (timestamp) => {
+      if (skipped.current) {
         return;
       }
 
-      const text = BOOT_LINES[lineIndex];
+      if (!startTime) {
+        startTime = timestamp;
+      }
 
-      let characterIndex = 0;
+      /*
+       * IMPORTANT:
+       * We calculate progress from elapsed time.
+       *
+       * This makes the animation much more consistent
+       * across different devices.
+       */
+      const elapsed = timestamp - startTime;
 
-      // Add an empty line before typing starts.
-      setLines((currentLines) => [
-        ...currentLines,
-        "",
-      ]);
+      const clampedTime = Math.min(
+        elapsed,
+        TOTAL_TYPING_TIME
+      );
 
-      setTyping(true);
+      /*
+       * Determine which characters should currently
+       * be visible.
+       */
+      let globalCharacters = Math.floor(
+        (clampedTime / TOTAL_TYPING_TIME) *
+          totalCharacters
+      );
 
-      // Short pause before the first character.
-      typingTimer.current = setTimeout(() => {
-        const typeCharacter = () => {
+      globalCharacters = Math.min(
+        globalCharacters,
+        totalCharacters
+      );
+
+      const newLines = [];
+
+      let remainingCharacters = globalCharacters;
+
+      for (let i = 0; i < BOOT_LINES.length; i++) {
+        const text = BOOT_LINES[i];
+
+        if (remainingCharacters >= text.length) {
+          newLines.push(text);
+          remainingCharacters -= text.length;
+        } else {
+          newLines.push(
+            text.slice(0, remainingCharacters)
+          );
+
+          break;
+        }
+      }
+
+      /*
+       * Keep already-completed lines visible.
+       */
+      while (newLines.length < BOOT_LINES.length) {
+        newLines.push("");
+      }
+
+      setLines(newLines);
+
+      /*
+       * Progress is based on actual elapsed time,
+       * not number of setTimeout calls.
+       */
+      setProgress(
+        Math.round(
+          (clampedTime / TOTAL_TYPING_TIME) * 100
+        )
+      );
+
+      if (elapsed < TOTAL_TYPING_TIME) {
+        animationFrame.current =
+          requestAnimationFrame(animate);
+
+        return;
+      }
+
+      /*
+       * Typing is finished.
+       */
+      setLines(BOOT_LINES);
+      setProgress(100);
+      setTyping(false);
+
+      /*
+       * Now reveal the final state.
+       */
+      const cinematicTimer = setTimeout(() => {
+        if (skipped.current) {
+          return;
+        }
+
+        setCinematic(true);
+
+        /*
+         * Give SYSTEM READY a moment to breathe.
+         */
+        const fadeTimer = setTimeout(() => {
           if (skipped.current) {
             return;
           }
 
-          if (characterIndex < text.length) {
-            const character = text[characterIndex];
+          setFading(true);
 
-            characterIndex += 1;
-
-            setLines((currentLines) => {
-              const updatedLines = [...currentLines];
-
-              updatedLines[updatedLines.length - 1] =
-                text.slice(0, characterIndex);
-
-              return updatedLines;
-            });
-
-            const delay = getCharacterDelay(character);
-
-            typingTimer.current = setTimeout(
-              typeCharacter,
-              delay
-            );
-
-            return;
-          }
-
-          // Finished typing this line.
-          setTyping(false);
-
-          const lineDelay =
-            LINE_DELAYS[lineIndex] || 900;
-
-          const nextTimer = setTimeout(() => {
+          /*
+           * Cinematic 1.4 second fade.
+           */
+          const hideTimer = setTimeout(() => {
             if (skipped.current) {
               return;
             }
 
-            const nextIndex = lineIndex + 1;
+            setHidden(true);
 
-            setProgress(
-              Math.round(
-                (nextIndex / BOOT_LINES.length) * 100
-              )
-            );
-
-            if (nextIndex < BOOT_LINES.length) {
-              typeLine(nextIndex);
-              return;
+            if (onDone) {
+              onDone();
             }
+          }, 1400);
 
-            /*
-             * All lines are finished.
-             * Pause before the cinematic reveal.
-             */
-            const cinematicTimer = setTimeout(() => {
-              if (skipped.current) {
-                return;
-              }
+          timers.current.push(hideTimer);
+        }, 1000);
 
-              setCinematic(true);
+        timers.current.push(fadeTimer);
+      }, LINE_PAUSES[LINE_PAUSES.length - 1]);
 
-              const fadeTimer = setTimeout(() => {
-                if (skipped.current) {
-                  return;
-                }
-
-                setFading(true);
-
-                const hideTimer = setTimeout(() => {
-                  if (skipped.current) {
-                    return;
-                  }
-
-                  setHidden(true);
-
-                  if (onDone) {
-                    onDone();
-                  }
-                }, 1400);
-
-                timers.current.push(hideTimer);
-              }, 1100);
-
-              timers.current.push(fadeTimer);
-            }, 400);
-
-            timers.current.push(cinematicTimer);
-          }, lineDelay);
-
-          timers.current.push(nextTimer);
-        };
-
-        typeCharacter();
-      }, 120);
+      timers.current.push(cinematicTimer);
     };
 
-    typeLine(0);
+    animationFrame.current =
+      requestAnimationFrame(animate);
 
     return () => {
       skipped.current = true;
@@ -231,12 +279,14 @@ const getCharacterDelay = (character) => {
 
     clearTimers();
 
-    setTyping(false);
     setLines(BOOT_LINES);
     setProgress(100);
+    setTyping(false);
     setCinematic(true);
 
-    // Keep a small transition even when skipped.
+    /*
+     * Short cinematic transition when skipped.
+     */
     const fadeTimer = setTimeout(() => {
       setFading(true);
 
@@ -258,11 +308,6 @@ const getCharacterDelay = (character) => {
     return null;
   }
 
-  /*
-   * Keep the static Tailwind classes separate.
-   * This avoids the JSX/template-literal syntax error
-   * that caused the GitHub Actions build to fail.
-   */
   const terminalClassName =
     "fixed inset-0 z-[200] bg-[#050505] flex flex-col px-4 sm:px-8 py-6 cursor-pointer overflow-hidden transition-all ease-out";
 
@@ -281,12 +326,14 @@ const getCharacterDelay = (character) => {
         transitionDuration: "1400ms",
       }}
     >
-      {/* Cinematic ambient glow */}
+      {/* Ambient cinematic glow */}
       <div
         className={[
           "pointer-events-none absolute inset-0",
           "transition-opacity duration-1000",
-          cinematic ? "opacity-100" : "opacity-0",
+          cinematic
+            ? "opacity-100"
+            : "opacity-0",
         ].join(" ")}
         style={{
           background:
@@ -294,12 +341,12 @@ const getCharacterDelay = (character) => {
         }}
       />
 
-      {/* Terminal header */}
+      {/* Header */}
       <div className="relative mono text-[10px] uppercase tracking-[0.2em] text-white/40 mb-4">
         ABYSS.SYS — BOOT SEQUENCE
       </div>
 
-      {/* Terminal output */}
+      {/* Terminal */}
       <div className="relative flex-1 overflow-hidden mono text-[11px] sm:text-xs leading-relaxed text-white/70">
         {lines.map((line, index) => {
           const isCurrentLine =
@@ -321,7 +368,7 @@ const getCharacterDelay = (character) => {
               </span>{" "}
               {line}
 
-              {/* Blinking cursor while typing */}
+              {/* Typing cursor */}
               {isCurrentLine &&
                 typing &&
                 !fading && (
@@ -334,7 +381,7 @@ const getCharacterDelay = (character) => {
                   />
                 )}
 
-              {/* Cursor after line has finished */}
+              {/* Idle cursor */}
               {isCurrentLine &&
                 !typing &&
                 !cinematic &&
@@ -348,7 +395,7 @@ const getCharacterDelay = (character) => {
                   />
                 )}
 
-              {/* Bright cursor during final reveal */}
+              {/* Final cursor */}
               {isCurrentLine &&
                 cinematic &&
                 !fading && (
@@ -365,11 +412,13 @@ const getCharacterDelay = (character) => {
         })}
       </div>
 
-      {/* Progress bar */}
+      {/* Progress */}
       <div className="relative mt-4">
         <div className="flex items-center justify-between mono text-[10px] text-white/40 mb-2">
           <span>
-            {cinematic ? "SYSTEM ONLINE" : "LOADING"}
+            {cinematic
+              ? "SYSTEM ONLINE"
+              : "LOADING"}
           </span>
 
           <span className="tabular-nums">
@@ -380,7 +429,7 @@ const getCharacterDelay = (character) => {
         <div className="h-1 w-full bg-white/10 overflow-hidden">
           <div
             className={[
-              "h-full bg-white transition-all duration-700",
+              "h-full bg-white transition-all duration-300",
               cinematic
                 ? "shadow-[0_0_14px_rgba(255,255,255,0.75)]"
                 : "",
@@ -396,7 +445,6 @@ const getCharacterDelay = (character) => {
         </p>
       </div>
 
-      {/* Blinking terminal cursor animation */}
       <style>{`
         @keyframes boot-cursor {
           0%,
