@@ -1,3 +1,6 @@
+import gaAiRobotImg from "@/assets/ga-ai-robot.jpg";
+import stallPredictionImg from "@/assets/stall-prediction-diagram.jpg";
+import esp32SnifferImg from "@/assets/esp32-sniffer.jpg";
 import { Image } from "@/components/ui/image";
 import { WorldMap } from "./WorldMap";
 
@@ -116,7 +119,7 @@ export function Portfolio() {
             <article id="gaairobot" className="group relative bg-[#050505] flex flex-col scroll-mt-24">
               <div className="relative aspect-[16/10] overflow-hidden bg-white/[0.02]">
                 <Image
-                  src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80"
+                  src={gaAiRobotImg}
                   fittingType="fit"
                   className="block w-full h-full object-contain"
                   alt="GAAI Robot" />
@@ -150,7 +153,7 @@ export function Portfolio() {
             <article id="aistallpredictionsystem" className="group relative bg-[#050505] flex flex-col scroll-mt-24">
               <div className="relative aspect-[16/10] overflow-hidden bg-white/[0.02]">
                 <Image
-                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"
+                  src={stallPredictionImg}
                   fittingType="fit"
                   className="block w-full h-full object-contain"
                   alt="AI Stall Prediction System" />
@@ -184,7 +187,7 @@ export function Portfolio() {
             <article id="esp32jamm" className="group relative bg-[#050505] flex flex-col scroll-mt-24">
               <div className="relative aspect-[16/10] overflow-hidden bg-white/[0.02]">
                 <Image
-                  src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80"
+                  src={esp32SnifferImg}
                   fittingType="fit"
                   className="block w-full h-full object-contain"
                   alt="ESP32 JAMM" />
