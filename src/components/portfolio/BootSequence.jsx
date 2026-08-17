@@ -20,38 +20,18 @@ const BOOT_LINES = [
 ];
 
 /*
- * Total time spent typing the characters.
+ * Total time used to type the boot text.
  *
- * This is intentionally independent of:
- * - screen size
- * - PC vs phone
- * - CPU speed
- * - browser timer speed
+ * This is time-based rather than relying on individual
+ * setTimeout calls, so it stays much more consistent
+ * across PC, phone, tablet, etc.
  */
 const TOTAL_TYPING_TIME = 6000;
 
 /*
- * Small pauses between completed lines.
- * These are NOT part of the 6 second typing time.
+ * Pause after the final line before the cinematic reveal.
  */
-const LINE_PAUSES = [
-  180,
-  140,
-  120,
-  140,
-  180,
-  220,
-  300,
-  120,
-  120,
-  120,
-  220,
-  260,
-  320,
-  280,
-  220,
-  900,
-];
+const FINAL_PAUSE = 900;
 
 export function BootSequence({ onDone }) {
   const [lines, setLines] = useState([]);
@@ -81,50 +61,16 @@ export function BootSequence({ onDone }) {
   useEffect(() => {
     skipped.current = false;
 
-    let lineIndex = 0;
     let startTime = null;
 
     /*
-     * Flatten the boot text into a single character timeline.
-     *
-     * Each character gets a position in the 6 second timeline.
+     * Count all characters so the complete terminal
+     * text fits into the same 6-second timeline.
      */
-    const characterPositions = [];
-
-    let totalCharacters = 0;
-
-    BOOT_LINES.forEach((line) => {
-      totalCharacters += line.length;
-    });
-
-    let currentCharacter = 0;
-
-    BOOT_LINES.forEach((line, index) => {
-      const positions = [];
-
-      for (let i = 0; i < line.length; i++) {
-        positions.push({
-          character: i + 1,
-          time:
-            (currentCharacter / totalCharacters) *
-            TOTAL_TYPING_TIME,
-        });
-
-        currentCharacter++;
-      }
-
-      characterPositions.push({
-        lineIndex: index,
-        text: line,
-        positions,
-      });
-    });
-
-    /*
-     * Start with the first empty line.
-     */
-    setLines([""]);
-    setTyping(true);
+    const totalCharacters = BOOT_LINES.reduce(
+      (total, line) => total + line.length,
+      0
+    );
 
     const animate = (timestamp) => {
       if (skipped.current) {
@@ -136,11 +82,7 @@ export function BootSequence({ onDone }) {
       }
 
       /*
-       * IMPORTANT:
-       * We calculate progress from elapsed time.
-       *
-       * This makes the animation much more consistent
-       * across different devices.
+       * Calculate actual elapsed time.
        */
       const elapsed = timestamp - startTime;
 
@@ -150,50 +92,65 @@ export function BootSequence({ onDone }) {
       );
 
       /*
-       * Determine which characters should currently
-       * be visible.
+       * Determine exactly how many characters should
+       * currently be visible.
        */
-      let globalCharacters = Math.floor(
+      let visibleCharacters = Math.floor(
         (clampedTime / TOTAL_TYPING_TIME) *
           totalCharacters
       );
 
-      globalCharacters = Math.min(
-        globalCharacters,
+      visibleCharacters = Math.min(
+        visibleCharacters,
         totalCharacters
       );
 
+      /*
+       * Build ONLY the lines that actually contain
+       * visible characters.
+       *
+       * This is the important fix.
+       *
+       * Previously we added empty strings for every
+       * future line, which caused the ">" to appear
+       * before the text.
+       */
       const newLines = [];
 
-      let remainingCharacters = globalCharacters;
+      let remainingCharacters = visibleCharacters;
 
       for (let i = 0; i < BOOT_LINES.length; i++) {
         const text = BOOT_LINES[i];
 
+        if (remainingCharacters <= 0) {
+          break;
+        }
+
         if (remainingCharacters >= text.length) {
+          /*
+           * This entire line has finished typing.
+           */
           newLines.push(text);
+
           remainingCharacters -= text.length;
         } else {
+          /*
+           * This is the line currently being typed.
+           */
           newLines.push(
             text.slice(0, remainingCharacters)
           );
+
+          remainingCharacters = 0;
 
           break;
         }
       }
 
-      /*
-       * Keep already-completed lines visible.
-       */
-      while (newLines.length < BOOT_LINES.length) {
-        newLines.push("");
-      }
-
       setLines(newLines);
 
       /*
-       * Progress is based on actual elapsed time,
-       * not number of setTimeout calls.
+       * Progress follows the same real elapsed time.
        */
       setProgress(
         Math.round(
@@ -201,6 +158,9 @@ export function BootSequence({ onDone }) {
         )
       );
 
+      /*
+       * Continue typing.
+       */
       if (elapsed < TOTAL_TYPING_TIME) {
         animationFrame.current =
           requestAnimationFrame(animate);
@@ -209,14 +169,14 @@ export function BootSequence({ onDone }) {
       }
 
       /*
-       * Typing is finished.
+       * Typing is completely finished.
        */
       setLines(BOOT_LINES);
       setProgress(100);
       setTyping(false);
 
       /*
-       * Now reveal the final state.
+       * Cinematic final pause.
        */
       const cinematicTimer = setTimeout(() => {
         if (skipped.current) {
@@ -226,7 +186,8 @@ export function BootSequence({ onDone }) {
         setCinematic(true);
 
         /*
-         * Give SYSTEM READY a moment to breathe.
+         * Let the final line remain visible
+         * before starting the fade.
          */
         const fadeTimer = setTimeout(() => {
           if (skipped.current) {
@@ -254,10 +215,16 @@ export function BootSequence({ onDone }) {
         }, 1000);
 
         timers.current.push(fadeTimer);
-      }, LINE_PAUSES[LINE_PAUSES.length - 1]);
+      }, FINAL_PAUSE);
 
       timers.current.push(cinematicTimer);
     };
+
+    /*
+     * Start animation.
+     */
+    setLines([]);
+    setTyping(true);
 
     animationFrame.current =
       requestAnimationFrame(animate);
@@ -270,6 +237,9 @@ export function BootSequence({ onDone }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /*
+   * Click anywhere to skip the boot sequence.
+   */
   const skip = () => {
     if (skipped.current) {
       return;
@@ -352,6 +322,15 @@ export function BootSequence({ onDone }) {
           const isCurrentLine =
             index === lines.length - 1;
 
+          /*
+           * The ">" is now rendered ONLY when the line
+           * contains actual text.
+           *
+           * Therefore it cannot appear ahead of the
+           * typing animation.
+           */
+          const hasText = line.length > 0;
+
           return (
             <div
               key={index}
@@ -363,10 +342,14 @@ export function BootSequence({ onDone }) {
                   : "",
               ].join(" ")}
             >
-              <span className="text-white/30">
-                {">"}
-              </span>{" "}
-              {line}
+              {hasText && (
+                <>
+                  <span className="text-white/30">
+                    {">"}
+                  </span>{" "}
+                  {line}
+                </>
+              )}
 
               {/* Typing cursor */}
               {isCurrentLine &&
@@ -395,7 +378,7 @@ export function BootSequence({ onDone }) {
                   />
                 )}
 
-              {/* Final cursor */}
+              {/* Final cinematic cursor */}
               {isCurrentLine &&
                 cinematic &&
                 !fading && (
@@ -445,6 +428,7 @@ export function BootSequence({ onDone }) {
         </p>
       </div>
 
+      {/* Cursor animation */}
       <style>{`
         @keyframes boot-cursor {
           0%,
