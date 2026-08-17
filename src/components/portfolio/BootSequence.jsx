@@ -21,21 +21,21 @@ const BOOT_LINES = [
 
 // Time to wait after each line finishes typing.
 const LINE_DELAYS = [
-  250,  // bootloader
-  180,  // CPU
-  150,  // Flash
-  150,  // PSRAM
-  200,  // SPIFFS
-  250,  // Wi-Fi
-  350,  // edge mesh
-  150,  // Brasov
-  150,  // Berlin
-  150,  // London
-  250,  // Tokyo
-  300,  // robot server
-  400,  // AI engine
-  350,  // sensors
-  300,  // portfolio
+  150,  // bootloader
+  80,  // CPU
+  50,  // Flash
+  50,  // PSRAM
+  100,  // SPIFFS
+  150,  // Wi-Fi
+  150,  // edge mesh
+  50,  // Brasov
+  50,  // Berlin
+  50,  // London
+  150,  // Tokyo
+  100,  // robot server
+  200,  // AI engine
+  150,  // sensors
+  100,  // portfolio
   600, // SYSTEM READY
 ];
 
