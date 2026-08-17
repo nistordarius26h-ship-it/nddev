@@ -21,22 +21,22 @@ const BOOT_LINES = [
 
 // Time to wait after each line finishes typing.
 const LINE_DELAYS = [
-  150,  // bootloader
-  100,  // CPU
-  50,  // Flash
-  50,  // PSRAM
-  100,  // SPIFFS
-  100,  // Wi-Fi
-  150,  // edge mesh
-  50,  // Brasov
-  50,  // Berlin
-  50,  // London
-  100,  // Tokyo
-  150,  // robot server
-  200,  // AI engine
-  100,  // sensors
-  150,  // portfolio
-  500, // SYSTEM READY
+  250,  // bootloader
+  180,  // CPU
+  150,  // Flash
+  150,  // PSRAM
+  200,  // SPIFFS
+  250,  // Wi-Fi
+  350,  // edge mesh
+  150,  // Brasov
+  150,  // Berlin
+  150,  // London
+  250,  // Tokyo
+  300,  // robot server
+  400,  // AI engine
+  350,  // sensors
+  300,  // portfolio
+  600, // SYSTEM READY
 ];
 
 export function BootSequence({ onDone }) {
@@ -72,20 +72,20 @@ export function BootSequence({ onDone }) {
     // Natural character-by-character typing speed.
 const getCharacterDelay = (character) => {
   if (reduceMotion) {
-    return 8;
+    return 5;
   }
 
-  // 100–160ms between normal characters
-  let delay = 100 + Math.random() * 60;
+  // Average: roughly 12–15ms per character.
+  let delay = 10 + Math.random() * 7;
 
-  // Slightly longer pause after spaces
+  // Small natural hesitation after spaces.
   if (character === " ") {
-    delay += 30 + Math.random() * 40;
+    delay += 4 + Math.random() * 5;
   }
 
-  // Longer pause after punctuation
+  // Slight pause after punctuation.
   if ([".", ",", ":", ";", "!"].includes(character)) {
-    delay += 80 + Math.random() * 100;
+    delay += 10 + Math.random() * 12;
   }
 
   return delay;
