@@ -20,8 +20,10 @@ const BOOT_LINES = [
   "SYSTEM READY — revealing interface",
 ];
 
-// Delay AFTER each line finishes typing.
-// Larger numbers make important operations feel heavier.
+/*
+ * Pause AFTER each line has finished typing.
+ * Longer values create a more realistic boot process.
+ */
 const LINE_DELAYS = [
   900,
   750,
@@ -53,8 +55,8 @@ export function BootSequence({ onDone }) {
   const typingTimer = useRef(null);
   const skipped = useRef(false);
 
-  const clearAllTimers = () => {
-    timers.current.forEach(clearTimeout);
+  const clearTimers = () => {
+    timers.current.forEach((timer) => clearTimeout(timer));
     timers.current = [];
 
     if (typingTimer.current) {
@@ -64,34 +66,33 @@ export function BootSequence({ onDone }) {
   };
 
   useEffect(() => {
-    const reduce = window.matchMedia(
+    const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    // Character typing speed.
-    // Lower = faster typing.
-    const BASE_CHAR_DELAY = reduce ? 8 : 38;
-
+    /*
+     * Character speed.
+     *
+     * The random variation makes the typing feel less robotic.
+     */
     const getCharacterDelay = (character) => {
-      if (reduce) return BASE_CHAR_DELAY;
+      if (reduceMotion) {
+        return 8;
+      }
 
-      // Natural variation between keystrokes.
-      let delay =
-        BASE_CHAR_DELAY +
-        Math.random() * 35 -
-        10;
+      let delay = 34 + Math.random() * 35;
 
-      // Small hesitation after spaces.
+      // Small pause after spaces.
       if (character === " ") {
         delay += 35 + Math.random() * 45;
       }
 
-      // Natural pause around punctuation.
-      if ([".", ",", ":", ";"].includes(character)) {
+      // Natural pause after punctuation.
+      if ([".", ",", ":", ";", "!"].includes(character)) {
         delay += 90 + Math.random() * 100;
       }
 
-      // Slight hesitation around numbers.
+      // Slight variation for numbers.
       if (/[0-9]/.test(character)) {
         delay += Math.random() * 20;
       }
@@ -108,107 +109,116 @@ export function BootSequence({ onDone }) {
       }
 
       const text = BOOT_LINES[lineIndex];
-      let charIndex = 0;
 
-      // Add an empty line before typing begins.
-      setLines((current) => [...current, ""]);
+      let characterIndex = 0;
+
+      // Create the empty line first.
+      setLines((currentLines) => [
+        ...currentLines,
+        "",
+      ]);
+
       setTyping(true);
 
-      // Small pause before the first character.
+      // Tiny pause before the first character.
       typingTimer.current = setTimeout(() => {
-        const typeNextCharacter = () => {
-          if (skipped.current) return;
+        const typeCharacter = () => {
+          if (skipped.current) {
+            return;
+          }
 
-          if (charIndex < text.length) {
-            const character = text[charIndex];
+          if (characterIndex < text.length) {
+            const character = text[characterIndex];
 
-            charIndex++;
+            characterIndex += 1;
 
-            setLines((current) => {
-              const updated = [...current];
+            setLines((currentLines) => {
+              const updatedLines = [...currentLines];
 
-              updated[updated.length - 1] =
-                text.slice(0, charIndex);
+              updatedLines[updatedLines.length - 1] =
+                text.slice(0, characterIndex);
 
-              return updated;
+              return updatedLines;
             });
 
-            const delay =
-              getCharacterDelay(character);
+            const delay = getCharacterDelay(character);
 
             typingTimer.current = setTimeout(
-              typeNextCharacter,
+              typeCharacter,
               delay
             );
 
             return;
           }
 
-          // Finished typing this line.
+          /*
+           * The current line is completely typed.
+           */
           setTyping(false);
 
-          const delay =
+          const lineDelay =
             LINE_DELAYS[lineIndex] ?? 900;
 
           const nextTimer = setTimeout(() => {
-            if (skipped.current) return;
+            if (skipped.current) {
+              return;
+            }
 
             const nextIndex = lineIndex + 1;
 
             setProgress(
               Math.round(
-                (nextIndex / BOOT_LINES.length) *
-                  100
+                (nextIndex / BOOT_LINES.length) * 100
               )
             );
 
-            if (
-              nextIndex <
-              BOOT_LINES.length
-            ) {
+            if (nextIndex < BOOT_LINES.length) {
               typeLine(nextIndex);
-            } else {
-              // --------------------------------
-              // CINEMATIC FINAL REVEAL
-              // --------------------------------
-
-              const finalPause = setTimeout(() => {
-                if (skipped.current) return;
-
-                setCinematic(true);
-
-                const fadeTimer = setTimeout(() => {
-                  if (skipped.current) return;
-
-                  setFading(true);
-
-                  const hideTimer = setTimeout(() => {
-                    if (skipped.current) return;
-
-                    setHidden(true);
-                    onDone?.();
-                  }, 1400);
-
-                  timers.current.push(
-                    hideTimer
-                  );
-                }, 1100);
-
-                timers.current.push(
-                  fadeTimer
-                );
-              }, 400);
-
-              timers.current.push(
-                finalPause
-              );
+              return;
             }
-          }, delay);
+
+            /*
+             * All lines are finished.
+             *
+             * Give SYSTEM READY some time on screen
+             * before starting the cinematic reveal.
+             */
+            const cinematicTimer = setTimeout(() => {
+              if (skipped.current) {
+                return;
+              }
+
+              setCinematic(true);
+
+              const fadeTimer = setTimeout(() => {
+                if (skipped.current) {
+                  return;
+                }
+
+                setFading(true);
+
+                const hideTimer = setTimeout(() => {
+                  if (skipped.current) {
+                    return;
+                  }
+
+                  setHidden(true);
+                  onDone?.();
+                }, 1400);
+
+                timers.current.push(hideTimer);
+              }, 1100);
+
+              timers.current.push(fadeTimer);
+            }, 400);
+
+            timers.current.push(cinematicTimer);
+          }, lineDelay);
 
           timers.current.push(nextTimer);
         };
 
-        typeNextCharacter();
+        typeCharacter();
       }, 120);
     };
 
@@ -216,25 +226,30 @@ export function BootSequence({ onDone }) {
 
     return () => {
       skipped.current = true;
-      clearAllTimers();
+      clearTimers();
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const skip = () => {
-    if (skipped.current) return;
+    if (skipped.current) {
+      return;
+    }
 
     skipped.current = true;
 
-    clearAllTimers();
+    clearTimers();
 
     setTyping(false);
     setLines(BOOT_LINES);
     setProgress(100);
     setCinematic(true);
 
-    // Very short cinematic transition even when skipped.
+    /*
+     * Skip still gives a very short transition
+     * instead of instantly cutting the screen.
+     */
     const fadeTimer = setTimeout(() => {
       setFading(true);
 
@@ -244,80 +259,48 @@ export function BootSequence({ onDone }) {
       }, 500);
 
       timers.current.push(hideTimer);
-    }, 150);
+    }, 100);
 
     timers.current.push(fadeTimer);
   };
 
-  if (hidden) return null;
+  if (hidden) {
+    return null;
+  }
+
+  const terminalClassName =
+    "fixed inset-0 z-[200] bg-[#050505] flex flex-col px-4 sm:px-8 py-6 cursor-pointer overflow-hidden transition-all ease-out";
+
+  const terminalStateClassName = fading
+    ? "opacity-0 scale-[1.015] blur-[2px]"
+    : "opacity-100 scale-100 blur-0";
 
   return (
     <div
       onClick={skip}
-      className={`
-        fixed inset-0 z-[200]
-        bg-[#050505]
-        flex flex-col
-        px-4 sm:px-8
-        py-6
-        cursor-pointer
-        overflow-hidden
-        transition-all
-        duration-[1400ms]
-        ease-out
-        ${
-          fading
-            ? "opacity-0 scale-[1.015] blur-[2px]"
-            : "opacity-100 scale-100 blur-0"
-        }
-      `}
+      className={`${terminalClassName} ${terminalStateClassName}`}
+      style={{
+        transitionDuration: "1400ms",
+      }}
     >
-      {/* -------------------------------- */}
-      {/* CINEMATIC AMBIENT GLOW */}
-      {/* -------------------------------- */}
-
+      {/* Cinematic ambient glow */}
       <div
-        className={`
-          pointer-events-none
-          absolute inset-0
-          transition-opacity
-          duration-1000
-          ${
-            cinematic
-              ? "opacity-100"
-              : "opacity-0"
-          }
-        `}
+        className={`pointer-events-none absolute inset-0 transition-opacity duration-1000 ${
+          cinematic ? "opacity-100" : "opacity-0"
+        }`}
         style={{
           background:
             "radial-gradient(circle at center, rgba(255,255,255,0.055), transparent 55%)",
         }}
       />
 
-      {/* -------------------------------- */}
-      {/* TERMINAL HEADER */}
-      {/* -------------------------------- */}
-
+      {/* Header */}
       <div className="relative mono text-[10px] uppercase tracking-[0.2em] text-white/40 mb-4">
         ABYSS.SYS — BOOT SEQUENCE
       </div>
 
-      {/* -------------------------------- */}
-      {/* TERMINAL OUTPUT */}
-      {/* -------------------------------- */}
-
-      <div
-        className="
-          relative
-          flex-1
-          overflow-hidden
-          mono
-          text-[11px]
-          sm:text-xs
-          leading-relaxed
-          text-white/70
-        "
-      >
+      {/* Terminal output */}
+      <div className="relative flex-1 overflow-hidden mono text-[11px] sm:text-xs leading-relaxed text-white/70">
         {lines.map((line, index) => {
           const isCurrentLine =
             index === lines.length - 1;
@@ -325,39 +308,28 @@ export function BootSequence({ onDone }) {
           return (
             <div
               key={index}
-              className={`
-                whitespace-pre-wrap
-                transition-colors
-                duration-300
-                ${
-                  isCurrentLine &&
-                  cinematic
-                    ? "text-white"
-                    : ""
-                }
-              `}
+              className={`whitespace-pre-wrap transition-colors duration-300 ${
+                isCurrentLine && cinematic
+                  ? "text-white"
+                  : ""
+              }`}
             >
               <span className="text-white/30">
                 {">"}
               </span>{" "}
               {line}
 
-              {/* -------------------------------- */}
-              {/* TYPING CURSOR */}
-              {/* -------------------------------- */}
-
+              {/*
+               * Blinking cursor while typing.
+               *
+               * It stays immediately after the last
+               * character, just like a real terminal.
+               */}
               {isCurrentLine &&
-                !fading &&
-                !cinematic && (
+                typing &&
+                !fading && (
                   <span
-                    className="
-                      inline-block
-                      w-[7px]
-                      h-[15px]
-                      ml-[2px]
-                      bg-white/80
-                      align-[-2px]
-                    "
+                    className="inline-block w-[7px] h-[15px] ml-[2px] bg-white/80 align-[-2px]"
                     style={{
                       animation:
                         "boot-cursor 0.65s steps(2, start) infinite",
@@ -365,22 +337,30 @@ export function BootSequence({ onDone }) {
                   />
                 )}
 
-              {/* -------------------------------- */}
-              {/* FINAL CINEMATIC CURSOR */}
-              {/* -------------------------------- */}
+              {/*
+               * Cursor after a line has finished typing.
+               */
+              {isCurrentLine &&
+                !typing &&
+                !cinematic &&
+                !fading && (
+                  <span
+                    className="inline-block w-[7px] h-[15px] ml-[2px] bg-white/70 align-[-2px]"
+                    style={{
+                      animation:
+                        "boot-cursor 0.8s steps(2, start) infinite",
+                    }}
+                  />
+                )}
 
+              {/*
+               * Bright final cursor during SYSTEM READY.
+               */}
               {isCurrentLine &&
                 cinematic &&
                 !fading && (
                   <span
-                    className="
-                      inline-block
-                      w-[7px]
-                      h-[15px]
-                      ml-[2px]
-                      bg-white
-                      align-[-2px]
-                    "
+                    className="inline-block w-[7px] h-[15px] ml-[2px] bg-white align-[-2px]"
                     style={{
                       animation:
                         "boot-cursor 0.5s steps(2, start) infinite",
@@ -392,26 +372,11 @@ export function BootSequence({ onDone }) {
         })}
       </div>
 
-      {/* -------------------------------- */}
-      {/* PROGRESS BAR */}
-      {/* -------------------------------- */}
-
+      {/* Progress bar */}
       <div className="relative mt-4">
-        <div
-          className="
-            flex
-            items-center
-            justify-between
-            mono
-            text-[10px]
-            text-white/40
-            mb-2
-          "
-        >
+        <div className="flex items-center justify-between mono text-[10px] text-white/40 mb-2">
           <span>
-            {cinematic
-              ? "SYSTEM ONLINE"
-              : "LOADING"}
+            {cinematic ? "SYSTEM ONLINE" : "LOADING"}
           </span>
 
           <span className="tabular-nums">
@@ -421,17 +386,11 @@ export function BootSequence({ onDone }) {
 
         <div className="h-1 w-full bg-white/10 overflow-hidden">
           <div
-            className={`
-              h-full
-              bg-white
-              transition-all
-              duration-700
-              ${
-                cinematic
-                  ? "shadow-[0_0_14px_rgba(255,255,255,0.75)]"
-                  : ""
-              }
-            `}
+            className={`h-full bg-white transition-all duration-700 ${
+              cinematic
+                ? "shadow-[0_0_14px_rgba(255,255,255,0.75)]"
+                : ""
+            }`}
             style={{
               width: `${progress}%`,
             }}
@@ -443,10 +402,7 @@ export function BootSequence({ onDone }) {
         </p>
       </div>
 
-      {/* -------------------------------- */}
-      {/* CURSOR ANIMATION */}
-      {/* -------------------------------- */}
-
+      {/* Cursor animation */}
       <style>{`
         @keyframes boot-cursor {
           0%,
