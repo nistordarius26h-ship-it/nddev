@@ -28,7 +28,7 @@ export function BootSequence({ onDone }) {
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const stepMs = reduce ? 35 : 220;
+    const stepMs = reduce ? 35 : 900;
     const arr = [];
     BOOT_LINES.forEach((line, i) => {
       const t = setTimeout(() => {
@@ -45,7 +45,7 @@ export function BootSequence({ onDone }) {
         onDone?.();
       }, reduce ? 100 : 650);
       arr.push(hide);
-    }, BOOT_LINES.length * stepMs + (reduce ? 120 : 900));
+    }, BOOT_LINES.length * stepMs + (reduce ? 120 : 1900));
     arr.push(finish);
     timers.current = arr;
     return () => timers.current.forEach(clearTimeout);
