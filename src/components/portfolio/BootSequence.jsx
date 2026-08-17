@@ -21,22 +21,22 @@ const BOOT_LINES = [
 
 // Time to wait after each line finishes typing.
 const LINE_DELAYS = [
-  900,
-  750,
-  650,
-  750,
-  900,
-  1250,
-  1600,
-  1100,
-  800,
-  800,
-  1400,
-  1550,
-  2000,
-  1750,
-  1200,
-  2200,
+  450,  // bootloader
+  400,  // CPU
+  300,  // Flash
+  350,  // PSRAM
+  450,  // SPIFFS
+  550,  // Wi-Fi
+  700,  // edge mesh
+  350,  // Brasov
+  300,  // Berlin
+  300,  // London
+  550,  // Tokyo
+  650,  // robot server
+  800,  // AI engine
+  700,  // sensors
+  550,  // portfolio
+  1400, // SYSTEM READY
 ];
 
 export function BootSequence({ onDone }) {
@@ -70,31 +70,32 @@ export function BootSequence({ onDone }) {
     ).matches;
 
     // Natural character-by-character typing speed.
-    const getCharacterDelay = (character) => {
-      if (reduceMotion) {
-        return 8;
-      }
+const getCharacterDelay = (character) => {
+  if (reduceMotion) {
+    return 8;
+  }
 
-      // Base typing speed with natural variation.
-      let delay = 34 + Math.random() * 35;
+  // Main typing speed.
+  // Slower than before so individual letters are visible.
+  let delay = 55 + Math.random() * 40;
 
-      // Spaces create a small human-like pause.
-      if (character === " ") {
-        delay += 35 + Math.random() * 45;
-      }
+  // Small natural pause after spaces.
+  if (character === " ") {
+    delay += 20 + Math.random() * 25;
+  }
 
-      // Punctuation creates a longer pause.
-      if ([".", ",", ":", ";", "!"].includes(character)) {
-        delay += 90 + Math.random() * 100;
-      }
+  // Slight hesitation after punctuation.
+  if ([".", ",", ":", ";", "!"].includes(character)) {
+    delay += 60 + Math.random() * 80;
+  }
 
-      // Slight variation around numbers.
-      if (/[0-9]/.test(character)) {
-        delay += Math.random() * 20;
-      }
+  // Numbers can have a tiny variation.
+  if (/[0-9]/.test(character)) {
+    delay += Math.random() * 15;
+  }
 
-      return Math.max(18, delay);
-    };
+  return Math.max(40, delay);
+};
 
     const typeLine = (lineIndex) => {
       if (
