@@ -21,22 +21,22 @@ const BOOT_LINES = [
 
 // Time to wait after each line finishes typing.
 const LINE_DELAYS = [
-  350,  // bootloader
-  300,  // CPU
-  200,  // Flash
-  250,  // PSRAM
-  350,  // SPIFFS
-  450,  // Wi-Fi
-  600,  // edge mesh
-  250,  // Brasov
-  200,  // Berlin
-  200,  // London
-  450,  // Tokyo
-  550,  // robot server
-  700,  // AI engine
-  600,  // sensors
-  450,  // portfolio
-  1200, // SYSTEM READY
+  250,  // bootloader
+  200,  // CPU
+  100,  // Flash
+  150,  // PSRAM
+  250,  // SPIFFS
+  350,  // Wi-Fi
+  400,  // edge mesh
+  150,  // Brasov
+  100,  // Berlin
+  100,  // London
+  350,  // Tokyo
+  400,  // robot server
+  500,  // AI engine
+  400,  // sensors
+  350,  // portfolio
+  1000, // SYSTEM READY
 ];
 
 export function BootSequence({ onDone }) {
@@ -77,7 +77,7 @@ const getCharacterDelay = (character) => {
 
   // Main typing speed.
   // Slower than before so individual letters are visible.
-  let delay = 75 + Math.random() * 40;
+  let delay = 175 + Math.random() * 40;
 
   // Small natural pause after spaces.
   if (character === " ") {
