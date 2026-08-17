@@ -1,4 +1,3 @@
-```jsx
 import { useEffect, useRef, useState } from "react";
 
 const BOOT_LINES = [
@@ -20,10 +19,7 @@ const BOOT_LINES = [
   "SYSTEM READY — revealing interface",
 ];
 
-/*
- * Pause AFTER each line has finished typing.
- * Longer values create a more realistic boot process.
- */
+// Time to wait after each line finishes typing.
 const LINE_DELAYS = [
   900,
   750,
@@ -56,7 +52,10 @@ export function BootSequence({ onDone }) {
   const skipped = useRef(false);
 
   const clearTimers = () => {
-    timers.current.forEach((timer) => clearTimeout(timer));
+    timers.current.forEach((timer) => {
+      clearTimeout(timer);
+    });
+
     timers.current = [];
 
     if (typingTimer.current) {
@@ -70,29 +69,26 @@ export function BootSequence({ onDone }) {
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    /*
-     * Character speed.
-     *
-     * The random variation makes the typing feel less robotic.
-     */
+    // Natural character-by-character typing speed.
     const getCharacterDelay = (character) => {
       if (reduceMotion) {
         return 8;
       }
 
+      // Base typing speed with natural variation.
       let delay = 34 + Math.random() * 35;
 
-      // Small pause after spaces.
+      // Spaces create a small human-like pause.
       if (character === " ") {
         delay += 35 + Math.random() * 45;
       }
 
-      // Natural pause after punctuation.
+      // Punctuation creates a longer pause.
       if ([".", ",", ":", ";", "!"].includes(character)) {
         delay += 90 + Math.random() * 100;
       }
 
-      // Slight variation for numbers.
+      // Slight variation around numbers.
       if (/[0-9]/.test(character)) {
         delay += Math.random() * 20;
       }
@@ -112,7 +108,7 @@ export function BootSequence({ onDone }) {
 
       let characterIndex = 0;
 
-      // Create the empty line first.
+      // Add an empty line before typing starts.
       setLines((currentLines) => [
         ...currentLines,
         "",
@@ -120,7 +116,7 @@ export function BootSequence({ onDone }) {
 
       setTyping(true);
 
-      // Tiny pause before the first character.
+      // Short pause before the first character.
       typingTimer.current = setTimeout(() => {
         const typeCharacter = () => {
           if (skipped.current) {
@@ -151,13 +147,11 @@ export function BootSequence({ onDone }) {
             return;
           }
 
-          /*
-           * The current line is completely typed.
-           */
+          // Finished typing this line.
           setTyping(false);
 
           const lineDelay =
-            LINE_DELAYS[lineIndex] ?? 900;
+            LINE_DELAYS[lineIndex] || 900;
 
           const nextTimer = setTimeout(() => {
             if (skipped.current) {
@@ -179,9 +173,7 @@ export function BootSequence({ onDone }) {
 
             /*
              * All lines are finished.
-             *
-             * Give SYSTEM READY some time on screen
-             * before starting the cinematic reveal.
+             * Pause before the cinematic reveal.
              */
             const cinematicTimer = setTimeout(() => {
               if (skipped.current) {
@@ -203,7 +195,10 @@ export function BootSequence({ onDone }) {
                   }
 
                   setHidden(true);
-                  onDone?.();
+
+                  if (onDone) {
+                    onDone();
+                  }
                 }, 1400);
 
                 timers.current.push(hideTimer);
@@ -246,16 +241,16 @@ export function BootSequence({ onDone }) {
     setProgress(100);
     setCinematic(true);
 
-    /*
-     * Skip still gives a very short transition
-     * instead of instantly cutting the screen.
-     */
+    // Keep a small transition even when skipped.
     const fadeTimer = setTimeout(() => {
       setFading(true);
 
       const hideTimer = setTimeout(() => {
         setHidden(true);
-        onDone?.();
+
+        if (onDone) {
+          onDone();
+        }
       }, 500);
 
       timers.current.push(hideTimer);
@@ -268,6 +263,11 @@ export function BootSequence({ onDone }) {
     return null;
   }
 
+  /*
+   * Keep the static Tailwind classes separate.
+   * This avoids the JSX/template-literal syntax error
+   * that caused the GitHub Actions build to fail.
+   */
   const terminalClassName =
     "fixed inset-0 z-[200] bg-[#050505] flex flex-col px-4 sm:px-8 py-6 cursor-pointer overflow-hidden transition-all ease-out";
 
@@ -278,23 +278,28 @@ export function BootSequence({ onDone }) {
   return (
     <div
       onClick={skip}
-      className={`${terminalClassName} ${terminalStateClassName}`}
+      className={[
+        terminalClassName,
+        terminalStateClassName,
+      ].join(" ")}
       style={{
         transitionDuration: "1400ms",
       }}
     >
       {/* Cinematic ambient glow */}
       <div
-        className={`pointer-events-none absolute inset-0 transition-opacity duration-1000 ${
-          cinematic ? "opacity-100" : "opacity-0"
-        }`}
+        className={[
+          "pointer-events-none absolute inset-0",
+          "transition-opacity duration-1000",
+          cinematic ? "opacity-100" : "opacity-0",
+        ].join(" ")}
         style={{
           background:
             "radial-gradient(circle at center, rgba(255,255,255,0.055), transparent 55%)",
         }}
       />
 
-      {/* Header */}
+      {/* Terminal header */}
       <div className="relative mono text-[10px] uppercase tracking-[0.2em] text-white/40 mb-4">
         ABYSS.SYS — BOOT SEQUENCE
       </div>
@@ -308,23 +313,20 @@ export function BootSequence({ onDone }) {
           return (
             <div
               key={index}
-              className={`whitespace-pre-wrap transition-colors duration-300 ${
+              className={[
+                "whitespace-pre-wrap",
+                "transition-colors duration-300",
                 isCurrentLine && cinematic
                   ? "text-white"
-                  : ""
-              }`}
+                  : "",
+              ].join(" ")}
             >
               <span className="text-white/30">
                 {">"}
               </span>{" "}
               {line}
 
-              {/*
-               * Blinking cursor while typing.
-               *
-               * It stays immediately after the last
-               * character, just like a real terminal.
-               */}
+              {/* Blinking cursor while typing */}
               {isCurrentLine &&
                 typing &&
                 !fading && (
@@ -337,9 +339,7 @@ export function BootSequence({ onDone }) {
                   />
                 )}
 
-              {/*
-               * Cursor after a line has finished typing.
-               */
+              {/* Cursor after line has finished */}
               {isCurrentLine &&
                 !typing &&
                 !cinematic &&
@@ -353,9 +353,7 @@ export function BootSequence({ onDone }) {
                   />
                 )}
 
-              {/*
-               * Bright final cursor during SYSTEM READY.
-               */}
+              {/* Bright cursor during final reveal */}
               {isCurrentLine &&
                 cinematic &&
                 !fading && (
@@ -386,11 +384,12 @@ export function BootSequence({ onDone }) {
 
         <div className="h-1 w-full bg-white/10 overflow-hidden">
           <div
-            className={`h-full bg-white transition-all duration-700 ${
+            className={[
+              "h-full bg-white transition-all duration-700",
               cinematic
                 ? "shadow-[0_0_14px_rgba(255,255,255,0.75)]"
-                : ""
-            }`}
+                : "",
+            ].join(" ")}
             style={{
               width: `${progress}%`,
             }}
@@ -402,7 +401,7 @@ export function BootSequence({ onDone }) {
         </p>
       </div>
 
-      {/* Cursor animation */}
+      {/* Blinking terminal cursor animation */}
       <style>{`
         @keyframes boot-cursor {
           0%,
@@ -419,4 +418,3 @@ export function BootSequence({ onDone }) {
     </div>
   );
 }
-```
