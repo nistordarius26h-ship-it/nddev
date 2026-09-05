@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Handles deep-link redirects from 404.html on GitHub Pages -->
+    <script type="text/javascript">
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
+
+    <title>Nistor Darius | Portfolio</title>
+    <meta
+      name="description"
+      content="Nistor Darius — AI & Robotics Engineer. Systems that sense, think, and move: robotics, embedded systems, and AI/software projects."
+    />
+    <link rel="canonical" href="https://nddev.dpdns.org/" />
+
+    <!-- Open Graph / social preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Nistor Darius | Portfolio" />
+    <meta
+      property="og:description"
+      content="AI & Robotics Engineer. Systems that sense, think, and move."
+    />
+    <meta property="og:url" content="https://nddev.dpdns.org/" />
+    <meta property="og:image" content="https://nddev.dpdns.org/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Nistor Darius | Portfolio" />
+    <meta
+      name="twitter:description"
+      content="AI & Robotics Engineer. Systems that sense, think, and move."
+    />
+    <meta name="twitter:image" content="https://nddev.dpdns.org/og-image.png" />
+
+    <!-- Structured data so search engines can show a rich result for the name -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Nistor Darius",
+        "url": "https://nddev.dpdns.org",
+        "jobTitle": "AI & Robotics Engineer",
+        "sameAs": [
+          "https://github.com/nistordarius26h-ship-it",
+          "https://www.linkedin.com/in/darius-nistor-3292783b1"
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
