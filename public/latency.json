@@ -1,26 +1,24 @@
 {
   "target": "nddev.dpdns.org",
-  "generatedAt": "2026-09-05T14:24:34.212Z",
+  "generatedAt": "2026-09-05T19:49:24.198Z",
   "source": "globalping.io",
   "latencies": {
     "Brasov,Romania": 25,
     "Berlin,Germany": 1,
-    "London,United Kingdom": 1,
+    "London,United Kingdom": 4,
     "Paris,France": 2,
     "Madrid,Spain": 31,
     "Stockholm,Sweden": 1,
-    "Moscow,Russia": 38,
+    "Moscow,Russia": 49,
     "Cairo,Egypt": 47,
-    "Abu Dhabi,UAE": 104,
+    "Abu Dhabi,UAE": 106,
     "New Delhi,India": 1,
-    "Singapore,Singapore": 1,
-    "Beijing,China": 160,
+    "Singapore,Singapore": 2,
+    "Beijing,China": 161,
     "Tokyo,Japan": 1,
-    "Seoul,South Korea": 2,
+    "Seoul,South Korea": 3,
     "Canberra,Australia": 1,
-    "Ottawa,Canada": 0,
-    "Brasilia,Brazil": 0,
-    "Buenos Aires,Argentina": 3,
-    "Pretoria,South Africa": 1
+    "Brasilia,Brazil": 1,
+    "Buenos Aires,Argentina": 2
   }
 }
