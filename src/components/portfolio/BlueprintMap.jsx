@@ -257,8 +257,16 @@ export function BlueprintMap({ open, onClose }) {
                 // neighboring branch's territory — that was the actual
                 // cause of AI & DATA crossing into PROJECTS, and
                 // ENGINEERING & ROBOTICS crossing into CONTACT.
-                const spread = Math.min(70, Math.max(45, title.children.length * 18));
-                const positions = fan(title, title.angle, title.children.length, spread, 260);
+                // Branches with wide (2-line) items need real room — 3
+                // long project cards crammed into the same tight spread
+                // as 3 short labels is what kept overlapping no matter
+                // how much stagger was added on top.
+                const hasWide = title.children.some((c) => c.wide);
+                const spread = hasWide
+                  ? Math.min(90, Math.max(65, title.children.length * 24))
+                  : Math.min(70, Math.max(45, title.children.length * 18));
+                const level2Radius = hasWide ? 360 : 260;
+                const positions = fan(title, title.angle, title.children.length, spread, level2Radius);
 
                 return title.children.map((child, i) => {
                   const pos = positions[i];
@@ -271,8 +279,8 @@ export function BlueprintMap({ open, onClose }) {
                   // exactly why the dense groups stayed cramped no matter
                   // how much I nudged one shared number.
                   const n = grandchildren.length;
-                  const gRadiusStep = 26 + n * 2.2;
-                  const gJitter = 10 + n * 1.4;
+                  const gRadiusStep = 30 + n * 3;
+                  const gJitter = 9;
                   const gPositions = n
                     ? spoke({ x: pos.x, y: pos.y }, childAngle, n, 55, gRadiusStep, gJitter)
                     : [];
@@ -283,7 +291,11 @@ export function BlueprintMap({ open, onClose }) {
                   // vertical offset and collided directly (exactly what
                   // happened to the 3 Projects). 4 distinct tiers covers
                   // every branch here (max 4 children at this level).
-                  const stagger = (i % 4) * 20;
+                  // Wide items get much taller stagger steps — 20px isn't
+                  // enough clearance for a 2-line text block, so adjacent
+                  // tiers were still touching even though they were
+                  // technically "staggered".
+                  const stagger = hasWide ? (i % 3) * 58 : (i % 4) * 20;
 
                   return (
                     <g key={`${title.id}-${child.label}`}>
