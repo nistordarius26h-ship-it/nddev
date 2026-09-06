@@ -1,24 +1,87 @@
 {
   "target": "nddev.dpdns.org",
-  "generatedAt": "2026-09-06T02:25:12.256Z",
-  "source": "globalping.io",
+  "generatedAt": "2026-09-06T10:05:57.342Z",
+  "source": "globalping.io + distance-based estimate fallback",
   "latencies": {
-    "Brasov,Romania": 25,
-    "London,United Kingdom": 1,
-    "Paris,France": 2,
-    "Madrid,Spain": 6,
-    "Stockholm,Sweden": 1,
-    "Moscow,Russia": 42,
-    "Cairo,Egypt": 47,
-    "Abu Dhabi,UAE": 104,
-    "New Delhi,India": 1,
-    "Singapore,Singapore": 1,
-    "Beijing,China": 100,
-    "Tokyo,Japan": 1,
-    "Seoul,South Korea": 1,
-    "Canberra,Australia": 1,
-    "Ottawa,Canada": 1,
-    "Brasilia,Brazil": 1,
-    "Buenos Aires,Argentina": 2
+    "Brasov,Romania": {
+      "ms": 24,
+      "measured": true
+    },
+    "Berlin,Germany": {
+      "ms": 1,
+      "measured": true
+    },
+    "London,United Kingdom": {
+      "ms": 1,
+      "measured": true
+    },
+    "Paris,France": {
+      "ms": 10,
+      "measured": true
+    },
+    "Madrid,Spain": {
+      "ms": 6,
+      "measured": true
+    },
+    "Stockholm,Sweden": {
+      "ms": 1,
+      "measured": true
+    },
+    "Moscow,Russia": {
+      "ms": 40,
+      "measured": true
+    },
+    "Cairo,Egypt": {
+      "ms": 47,
+      "measured": true
+    },
+    "Abu Dhabi,UAE": {
+      "ms": 105,
+      "measured": true
+    },
+    "New Delhi,India": {
+      "ms": 1,
+      "measured": true
+    },
+    "Singapore,Singapore": {
+      "ms": 1,
+      "measured": true
+    },
+    "Beijing,China": {
+      "ms": 157,
+      "measured": true
+    },
+    "Tokyo,Japan": {
+      "ms": 1,
+      "measured": true
+    },
+    "Seoul,South Korea": {
+      "ms": 2,
+      "measured": true
+    },
+    "Canberra,Australia": {
+      "ms": 1,
+      "measured": true
+    },
+    "Washington DC,USA": {
+      "ms": 125,
+      "measured": false
+    },
+    "Ottawa,Canada": {
+      "ms": 1,
+      "measured": true
+    },
+    "Brasilia,Brazil": {
+      "ms": 2,
+      "measured": true
+    },
+    "Buenos Aires,Argentina": {
+      "ms": 15,
+      "measured": true
+    },
+    "Pretoria,South Africa": {
+      "ms": 126,
+      "measured": false
+    }
   }
 }
