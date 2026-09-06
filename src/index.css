@@ -172,31 +172,27 @@ html {
   }
 }
 /* ===== Blueprint Map overlay (schematic site-mesh navigation) ===== */
-@keyframes blueprint-map-in {
+@keyframes overlay-fade-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
-@keyframes blueprint-map-out {
+@keyframes overlay-fade-out {
   from {
     opacity: 1;
-    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: scale(0.97);
   }
 }
 .blueprint-map-overlay {
-  animation: blueprint-map-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: overlay-fade-in 0.45s ease forwards;
 }
 .blueprint-map-overlay.closing {
-  animation: blueprint-map-out 0.32s cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: overlay-fade-out 0.35s ease forwards;
 }
 
 .blueprint-map-grid {
@@ -277,6 +273,42 @@ html {
   animation: fade-up 0.3s ease forwards;
 }
 
+/* Purely decorative spiderweb strands — not interactive */
+.mesh-web-ring {
+  fill: none;
+  stroke: rgba(140, 190, 255, 0.14);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  pointer-events: none;
+}
+.mesh-web-thread {
+  stroke: rgba(140, 190, 255, 0.1);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  pointer-events: none;
+}
+
+/* Held/expanded state on a title node */
+.mesh-node-active {
+  fill: rgba(160, 200, 255, 0.35) !important;
+  stroke-width: 3 !important;
+}
+
+/* Child (satellite) nodes, revealed on hold or always for Projects */
+.mesh-node-dot-small {
+  transition: r 0.15s ease, fill 0.15s ease;
+}
+.mesh-node-child[role="button"] {
+  cursor: pointer;
+}
+.mesh-node-child:not([role="button"]) {
+  cursor: default;
+}
+.mesh-line-child {
+  stroke: rgba(140, 190, 255, 0.3);
+  stroke-width: 1;
+}
+
 /* ===== Konami code easter egg ===== */
 @keyframes konami-flicker {
   0%,
@@ -351,12 +383,12 @@ html {
   }
 }
 
-/* ===== Terminal open/close transition (was an abrupt hard-cut before) ===== */
+/* ===== Terminal open/close transition (pure crossfade, PowerPoint-style) ===== */
 .terminal-overlay {
-  animation: blueprint-map-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: overlay-fade-in 0.35s ease forwards;
 }
 .terminal-overlay.closing {
-  animation: blueprint-map-out 0.28s cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: overlay-fade-out 0.3s ease forwards;
 }
 
 /* ===== Site-wide transition safety net =====
