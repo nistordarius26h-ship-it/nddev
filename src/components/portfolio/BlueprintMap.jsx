@@ -18,8 +18,8 @@ import {
 // clickable nodes are ones that open a real external link (a project's
 // GitHub repo, or a contact method) in a new tab. Everything else is
 // purely informational.
-const CX = 550;
-const CY = 430;
+const CX = 650;
+const CY = 600;
 const RING_RADIUS = 170;
 
 function polar(angleDeg, radius, cx = CX, cy = CY) {
@@ -31,15 +31,34 @@ function angleFromHub(x, y) {
   return (Math.atan2(y - CY, x - CX) * 180) / Math.PI;
 }
 
-// Spreads `count` children around `origin`, fanned across `spread`
-// degrees centered on `originAngle`, at `radius` from origin.
-function fan(origin, originAngle, count, spread, radius) {
-  if (count === 1) return [polar(originAngle, radius, origin.x, origin.y)];
+// Spreads `count` children around `origin`, fanned across `spread` degrees
+// centered on `originAngle`. Alternates between `baseRadius` and
+// `baseRadius + radiusStep` by index parity — a second staggered ring, not
+// just a single arc — so dense branches get real room instead of cramming
+// every sibling onto one crowded circle.
+function fan(origin, originAngle, count, spread, baseRadius, radiusStep = 0) {
+  if (count === 1) return [polar(originAngle, baseRadius, origin.x, origin.y)];
   const start = originAngle - spread / 2;
   const step = spread / (count - 1);
-  return Array.from({ length: count }, (_, i) =>
-    polar(start + i * step, radius, origin.x, origin.y)
-  );
+  return Array.from({ length: count }, (_, i) => {
+    const radius = baseRadius + (i % 2 === 1 ? radiusStep : 0);
+    return polar(start + i * step, radius, origin.x, origin.y);
+  });
+}
+
+// For dense branches (many skills under one group), a wide fan collides
+// with neighboring groups' fans since they all originate close together.
+// Instead, lay items out as a narrow "spoke" trailing outward along the
+// group's own direction from the hub — each successive item further out,
+// with only a small alternating lateral jitter for label legibility. Since
+// each group points a different direction, spokes diverge outward and
+// don't cross into each other.
+function spoke(origin, angleDeg, count, baseRadius, radiusStep, jitterDeg = 8) {
+  return Array.from({ length: count }, (_, i) => {
+    const a = angleDeg + (i % 2 === 0 ? -jitterDeg : jitterDeg);
+    const r = baseRadius + i * radiusStep;
+    return polar(a, r, origin.x, origin.y);
+  });
 }
 
 // --- Real repo URLs. Note: the "gaairobot" slug in portfolioData.js
@@ -170,7 +189,7 @@ export function BlueprintMap({ open, onClose }) {
 
       <div className="relative h-[calc(100%-3rem)] w-full">
         <TransformWrapper
-          initialScale={0.62}
+          initialScale={0.42}
           minScale={0.4}
           maxScale={5}
           centerOnInit
@@ -183,16 +202,16 @@ export function BlueprintMap({ open, onClose }) {
             contentStyle={{ width: "100%", height: "100%" }}
           >
             <svg
-              viewBox="0 0 1150 950"
+              viewBox="0 0 1550 1350"
               className="w-full h-full"
               role="img"
               aria-label="Diagram of site sections and projects"
             >
               {/* Decorative web strands */}
-              <circle cx={CX} cy={CY} r={110} className="mesh-web-ring" />
-              <circle cx={CX} cy={CY} r={260} className="mesh-web-ring" />
+              <circle cx={CX} cy={CY} r={130} className="mesh-web-ring" />
+              <circle cx={CX} cy={CY} r={310} className="mesh-web-ring" />
               {[45, 135, 225, 315].map((a) => {
-                const p = polar(a, 320);
+                const p = polar(a, 380);
                 return (
                   <line key={a} x1={CX} y1={CY} x2={p.x} y2={p.y} className="mesh-web-thread" />
                 );
@@ -233,21 +252,20 @@ export function BlueprintMap({ open, onClose }) {
 
               {/* Level 2 children + their own level-3 grandchildren (skills only) */}
               {TITLES.filter((t) => t.children).map((title) => {
-                const spread = Math.min(170, Math.max(60, title.children.length * 32));
-                const positions = fan(title, title.angle, title.children.length, spread, 220);
+                const spread = Math.min(175, Math.max(70, title.children.length * 40));
+                const positions = fan(title, title.angle, title.children.length, spread, 260);
 
                 return title.children.map((child, i) => {
                   const pos = positions[i];
                   const clickable = !!child.href;
                   const grandchildren = child.skills || [];
                   const childAngle = angleFromHub(pos.x, pos.y);
-                  const gSpread = Math.min(175, Math.max(55, grandchildren.length * 22));
                   const gPositions = grandchildren.length
-                    ? fan({ x: pos.x, y: pos.y }, childAngle, grandchildren.length, gSpread, 160)
+                    ? spoke({ x: pos.x, y: pos.y }, childAngle, grandchildren.length, 55, 30)
                     : [];
                   // Stagger alternating labels further out so adjacent
                   // siblings' text doesn't sit on the same line and overlap.
-                  const stagger = i % 2 === 0 ? 0 : 14;
+                  const stagger = i % 2 === 0 ? 0 : 20;
 
                   return (
                     <g key={`${title.id}-${child.label}`}>
@@ -292,7 +310,7 @@ export function BlueprintMap({ open, onClose }) {
                       {/* Level 3 — individual skills under each skill group */}
                       {grandchildren.map((skill, gi) => {
                         const gpos = gPositions[gi];
-                        const gStagger = gi % 2 === 0 ? 0 : 11;
+                        const gStagger = gi % 2 === 0 ? 0 : 16;
                         return (
                           <g key={skill}>
                             <line
