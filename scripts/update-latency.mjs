@@ -153,6 +153,29 @@ async function main() {
     await new Promise((res) => setTimeout(res, 500));
   }
 
+  // Sanity check: Brasov is the closest probe to home by definition, so
+  // nothing else should ever measure a lower latency. If it does, that
+  // measurement is wrong (routing weirdness, a bad probe, etc.) — replace
+  // it with the distance-based estimate rather than reporting a number
+  // that's provably impossible.
+  const home = results["Brasov,Romania"];
+  if (home?.measured) {
+    for (const city of CITIES) {
+      if (city.key === "Brasov,Romania") continue;
+      const r = results[city.key];
+      if (r.measured && r.ms <= home.ms) {
+        const distanceKm = haversineKm(HOME, city);
+        const estimate = estimateLatencyMs(distanceKm);
+        console.warn(
+          `  ${city.key}: rejected — measured ${r.ms}ms is not lower than ` +
+            `Brasov's own ${home.ms}ms, which isn't physically possible. ` +
+            `Falling back to ~${estimate}ms estimate.`
+        );
+        results[city.key] = { ms: estimate, measured: false };
+      }
+    }
+  }
+
   const output = {
     target: TARGET,
     generatedAt: new Date().toISOString(),
