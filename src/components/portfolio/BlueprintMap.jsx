@@ -252,7 +252,12 @@ export function BlueprintMap({ open, onClose }) {
 
               {/* Level 2 children + their own level-3 grandchildren (skills only) */}
               {TITLES.filter((t) => t.children).map((title) => {
-                const spread = Math.min(175, Math.max(70, title.children.length * 40));
+                // Capped well inside this branch's own 90°-wide lane (the
+                // 4 title nodes sit 90° apart) so it can never fan into a
+                // neighboring branch's territory — that was the actual
+                // cause of AI & DATA crossing into PROJECTS, and
+                // ENGINEERING & ROBOTICS crossing into CONTACT.
+                const spread = Math.min(70, Math.max(45, title.children.length * 18));
                 const positions = fan(title, title.angle, title.children.length, spread, 260);
 
                 return title.children.map((child, i) => {
