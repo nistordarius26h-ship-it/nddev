@@ -189,7 +189,7 @@ export function BlueprintMap({ open, onClose }) {
 
       <div className="relative h-[calc(100%-3rem)] w-full">
         <TransformWrapper
-          initialScale={0.42}
+          initialScale={0.36}
           minScale={0.4}
           maxScale={5}
           centerOnInit
@@ -202,7 +202,7 @@ export function BlueprintMap({ open, onClose }) {
             contentStyle={{ width: "100%", height: "100%" }}
           >
             <svg
-              viewBox="0 0 1550 1350"
+              viewBox="0 0 1750 1550"
               className="w-full h-full"
               role="img"
               aria-label="Diagram of site sections and projects"
@@ -265,12 +265,25 @@ export function BlueprintMap({ open, onClose }) {
                   const clickable = !!child.href;
                   const grandchildren = child.skills || [];
                   const childAngle = angleFromHub(pos.x, pos.y);
-                  const gPositions = grandchildren.length
-                    ? spoke({ x: pos.x, y: pos.y }, childAngle, grandchildren.length, 55, 30)
+                  // Spacing scales with item count — a flat constant gave
+                  // a 12-skill group (Engineering & Robotics) the same
+                  // room as a 5-skill group (Cloud & Security), which is
+                  // exactly why the dense groups stayed cramped no matter
+                  // how much I nudged one shared number.
+                  const n = grandchildren.length;
+                  const gRadiusStep = 26 + n * 2.2;
+                  const gJitter = 10 + n * 1.4;
+                  const gPositions = n
+                    ? spoke({ x: pos.x, y: pos.y }, childAngle, n, 55, gRadiusStep, gJitter)
                     : [];
                   // Stagger alternating labels further out so adjacent
                   // siblings' text doesn't sit on the same line and overlap.
-                  const stagger = i % 2 === 0 ? 0 : 20;
+                  // 4-way stagger (not just 2) — with only 2 tiers, item 0
+                  // and item 2 in a 3-item branch landed on the same
+                  // vertical offset and collided directly (exactly what
+                  // happened to the 3 Projects). 4 distinct tiers covers
+                  // every branch here (max 4 children at this level).
+                  const stagger = (i % 4) * 20;
 
                   return (
                     <g key={`${title.id}-${child.label}`}>
@@ -315,7 +328,7 @@ export function BlueprintMap({ open, onClose }) {
                       {/* Level 3 — individual skills under each skill group */}
                       {grandchildren.map((skill, gi) => {
                         const gpos = gPositions[gi];
-                        const gStagger = gi % 2 === 0 ? 0 : 16;
+                        const gStagger = (gi % 4) * 15;
                         return (
                           <g key={skill}>
                             <line
