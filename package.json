@@ -71,6 +71,8 @@
     "react-resizable-panels": "^2.1.7",
     "react-router-dom": "^6.26.0",
     "react-zoom-pan-pinch": "^3.6.1",
+    "@react-three/fiber": "^8.17.10",
+    "@react-three/drei": "^9.114.3",
     "recharts": "^2.15.4",
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.0.2",
