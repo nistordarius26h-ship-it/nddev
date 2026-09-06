@@ -1,6 +1,6 @@
 {
   "target": "nddev.dpdns.org",
-  "generatedAt": "2026-09-06T14:46:30.670Z",
+  "generatedAt": "2026-09-06T16:29:26.780Z",
   "source": "globalping.io + distance-based estimate fallback",
   "latencies": {
     "Brasov,Romania": {
@@ -8,24 +8,24 @@
       "measured": true
     },
     "Berlin,Germany": {
-      "ms": 1,
-      "measured": true
+      "ms": 31,
+      "measured": false
     },
     "London,United Kingdom": {
-      "ms": 1,
-      "measured": true
+      "ms": 43,
+      "measured": false
     },
     "Paris,France": {
-      "ms": 1,
-      "measured": true
+      "ms": 40,
+      "measured": false
     },
     "Madrid,Spain": {
-      "ms": 6,
+      "ms": 31,
       "measured": true
     },
     "Stockholm,Sweden": {
-      "ms": 1,
-      "measured": true
+      "ms": 37,
+      "measured": false
     },
     "Moscow,Russia": {
       "ms": 39,
@@ -36,52 +36,52 @@
       "measured": true
     },
     "Abu Dhabi,UAE": {
-      "ms": 106,
+      "ms": 103,
       "measured": true
     },
     "New Delhi,India": {
-      "ms": 1,
-      "measured": true
+      "ms": 83,
+      "measured": false
     },
     "Singapore,Singapore": {
-      "ms": 1,
-      "measured": true
+      "ms": 141,
+      "measured": false
     },
     "Beijing,China": {
-      "ms": 112,
+      "ms": 159,
       "measured": true
     },
     "Tokyo,Japan": {
-      "ms": 2,
-      "measured": true
+      "ms": 138,
+      "measured": false
     },
     "Seoul,South Korea": {
-      "ms": 2,
-      "measured": true
+      "ms": 125,
+      "measured": false
     },
     "Canberra,Australia": {
-      "ms": 1,
-      "measured": true
+      "ms": 228,
+      "measured": false
     },
     "Washington DC,USA": {
       "ms": 125,
       "measured": false
     },
     "Ottawa,Canada": {
-      "ms": 1,
-      "measured": true
+      "ms": 117,
+      "measured": false
     },
     "Brasilia,Brazil": {
       "ms": 155,
       "measured": false
     },
     "Buenos Aires,Argentina": {
-      "ms": 3,
-      "measured": true
+      "ms": 187,
+      "measured": false
     },
     "Pretoria,South Africa": {
-      "ms": 1,
-      "measured": true
+      "ms": 126,
+      "measured": false
     }
   }
 }
