@@ -32,7 +32,7 @@ export const DOMAINS = [
 
 export const GITHUB_URL = "https://github.com/nistordarius26h-ship-it";
 export const LINKEDIN_URL =
-  "https://www.linkedin.com/in/darius-nistor-3292783b1";
+  "https://www.linkedin.com/in/darius-nistor-3292783b1/";
 export const CONTACT_EMAIL = "nistordarius26h@gmail.com";
 export const GITHUB_USER = "nistordarius26h-ship-it";
 
