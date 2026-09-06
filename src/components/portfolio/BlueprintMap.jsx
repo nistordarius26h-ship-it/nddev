@@ -18,9 +18,9 @@ import {
 // clickable nodes are ones that open a real external link (a project's
 // GitHub repo, or a contact method) in a new tab. Everything else is
 // purely informational.
-const CX = 500;
-const CY = 340;
-const RING_RADIUS = 150;
+const CX = 550;
+const CY = 430;
+const RING_RADIUS = 170;
 
 function polar(angleDeg, radius, cx = CX, cy = CY) {
   const rad = (angleDeg * Math.PI) / 180;
@@ -46,7 +46,10 @@ function fan(origin, originAngle, count, spread, radius) {
 // doesn't match the actual repo name (ga_ai_robot) — corrected here. If
 // the other two slugs are also off, tell me the real ones and I'll fix
 // the source data too. ---
-const REPO_OVERRIDES = { gaairobot: "ga_ai_robot" };
+const REPO_OVERRIDES = {
+  gaairobot: "ga_ai_robot",
+  aistallpredictionsystem: "AI-Stall-Prediction-System",
+};
 function repoUrl(project) {
   const slug = REPO_OVERRIDES[project.repo] || project.repo;
   return `${GITHUB_URL}/${slug}`;
@@ -63,7 +66,7 @@ const TITLES = [
     ...polar(180, RING_RADIUS),
     children: [
       { label: PROFILE.name, detail: PROFILE.tagline },
-      { label: "BACKGROUND", detail: truncate(aboutParagraph, 46), wide: true },
+      { label: "BACKGROUND", detail: truncate(aboutParagraph, 58), wide: true },
     ],
   },
   {
@@ -73,7 +76,7 @@ const TITLES = [
     ...polar(270, RING_RADIUS),
     children: PROJECTS.map((p) => ({
       label: p.title.toUpperCase(),
-      detail: truncate(p.description, 46),
+      detail: truncate(p.description, 58),
       href: repoUrl(p),
       wide: true,
     })),
@@ -167,7 +170,7 @@ export function BlueprintMap({ open, onClose }) {
 
       <div className="relative h-[calc(100%-3rem)] w-full">
         <TransformWrapper
-          initialScale={1}
+          initialScale={0.62}
           minScale={0.4}
           maxScale={5}
           centerOnInit
@@ -180,16 +183,16 @@ export function BlueprintMap({ open, onClose }) {
             contentStyle={{ width: "100%", height: "100%" }}
           >
             <svg
-              viewBox="0 0 1000 900"
+              viewBox="0 0 1150 950"
               className="w-full h-full"
               role="img"
               aria-label="Diagram of site sections and projects"
             >
               {/* Decorative web strands */}
-              <circle cx={CX} cy={CY} r={95} className="mesh-web-ring" />
-              <circle cx={CX} cy={CY} r={215} className="mesh-web-ring" />
+              <circle cx={CX} cy={CY} r={110} className="mesh-web-ring" />
+              <circle cx={CX} cy={CY} r={260} className="mesh-web-ring" />
               {[45, 135, 225, 315].map((a) => {
-                const p = polar(a, 260);
+                const p = polar(a, 320);
                 return (
                   <line key={a} x1={CX} y1={CY} x2={p.x} y2={p.y} className="mesh-web-thread" />
                 );
@@ -230,18 +233,21 @@ export function BlueprintMap({ open, onClose }) {
 
               {/* Level 2 children + their own level-3 grandchildren (skills only) */}
               {TITLES.filter((t) => t.children).map((title) => {
-                const spread = Math.min(150, Math.max(50, title.children.length * 24));
-                const positions = fan(title, title.angle, title.children.length, spread, 100);
+                const spread = Math.min(170, Math.max(60, title.children.length * 32));
+                const positions = fan(title, title.angle, title.children.length, spread, 220);
 
                 return title.children.map((child, i) => {
                   const pos = positions[i];
                   const clickable = !!child.href;
                   const grandchildren = child.skills || [];
                   const childAngle = angleFromHub(pos.x, pos.y);
-                  const gSpread = Math.min(160, Math.max(40, grandchildren.length * 16));
+                  const gSpread = Math.min(175, Math.max(55, grandchildren.length * 22));
                   const gPositions = grandchildren.length
-                    ? fan({ x: pos.x, y: pos.y }, childAngle, grandchildren.length, gSpread, 85)
+                    ? fan({ x: pos.x, y: pos.y }, childAngle, grandchildren.length, gSpread, 160)
                     : [];
+                  // Stagger alternating labels further out so adjacent
+                  // siblings' text doesn't sit on the same line and overlap.
+                  const stagger = i % 2 === 0 ? 0 : 14;
 
                   return (
                     <g key={`${title.id}-${child.label}`}>
@@ -270,12 +276,12 @@ export function BlueprintMap({ open, onClose }) {
                         aria-label={clickable ? `Open ${child.label}` : undefined}
                       >
                         <circle cx={pos.x} cy={pos.y} r={6} className="mesh-node-dot mesh-node-dot-small" />
-                        <text x={pos.x} y={pos.y + 18} textAnchor="middle" className="mesh-node-label mesh-node-label-small">
+                        <text x={pos.x} y={pos.y + 18 + stagger} textAnchor="middle" className="mesh-node-label mesh-node-label-small">
                           {child.label}
                         </text>
                         <text
                           x={pos.x}
-                          y={pos.y + 30}
+                          y={pos.y + 30 + stagger}
                           textAnchor="middle"
                           className={`mesh-node-detail${child.wide ? " mesh-node-detail-wide" : ""}`}
                         >
@@ -286,6 +292,7 @@ export function BlueprintMap({ open, onClose }) {
                       {/* Level 3 — individual skills under each skill group */}
                       {grandchildren.map((skill, gi) => {
                         const gpos = gPositions[gi];
+                        const gStagger = gi % 2 === 0 ? 0 : 11;
                         return (
                           <g key={skill}>
                             <line
@@ -299,7 +306,7 @@ export function BlueprintMap({ open, onClose }) {
                             />
                             <g className="mesh-node mesh-node-inert" style={{ animationDelay: `${gi * 25}ms` }}>
                               <circle cx={gpos.x} cy={gpos.y} r={3.5} className="mesh-node-dot mesh-node-dot-tiny" />
-                              <text x={gpos.x} y={gpos.y + 13} textAnchor="middle" className="mesh-node-label-tiny">
+                              <text x={gpos.x} y={gpos.y + 13 + gStagger} textAnchor="middle" className="mesh-node-label-tiny">
                                 {skill}
                               </text>
                             </g>

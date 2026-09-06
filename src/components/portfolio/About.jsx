@@ -1,4 +1,4 @@
-const LINKEDIN_URL = "https://www.linkedin.com/in/darius-nistor-3292783b1";
+const LINKEDIN_URL = "https://www.linkedin.com/in/darius-nistor-3292783b1/";
 
 export function About() {
   return (
