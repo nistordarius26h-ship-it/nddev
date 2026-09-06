@@ -308,6 +308,37 @@ html {
   stroke: rgba(140, 190, 255, 0.3);
   stroke-width: 1;
 }
+.mesh-line-grandchild {
+  stroke: rgba(140, 190, 255, 0.2);
+  stroke-width: 0.75;
+}
+
+/* Inert nodes — informational only, no click affordance */
+.mesh-node-inert {
+  cursor: default;
+}
+.mesh-node-inert .mesh-node-dot {
+  fill: #050b16;
+}
+.mesh-node-inert:hover .mesh-node-dot,
+.mesh-node-inert:hover .mesh-node-label {
+  fill: inherit;
+}
+
+.mesh-node-dot-tiny {
+  fill: rgba(10, 15, 25, 0.9);
+  stroke: rgba(160, 200, 255, 0.5);
+  stroke-width: 1.5;
+}
+.mesh-node-label-tiny {
+  fill: rgba(190, 210, 255, 0.5);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 7px;
+  letter-spacing: 0.02em;
+}
+.mesh-node-detail-wide {
+  font-size: 7.5px;
+}
 
 /* ===== Konami code easter egg ===== */
 @keyframes konami-flicker {
