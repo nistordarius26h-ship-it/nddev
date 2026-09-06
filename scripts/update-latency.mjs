@@ -126,7 +126,13 @@ async function measureCity(city) {
     // A rounded 0ms reading between two different countries is not
     // physically plausible over real internet routing — treat it as a
     // failed measurement and use the distance-based estimate instead.
-    if (typeof avg === "number" && avg > 0 && Math.round(avg) > 0) {
+    // Absolute floor, independent of the Brasov-relative check in main():
+    // that check only runs if Brasov's own measurement succeeds that
+    // round, so a bogus low reading could slip through if Brasov's probe
+    // happened to fail. A flat "anything under 5ms is implausible for a
+    // cross-country/continent measurement" floor catches it regardless.
+    const MIN_PLAUSIBLE_MS = 5;
+    if (typeof avg === "number" && Math.round(avg) >= MIN_PLAUSIBLE_MS) {
       console.log(`✓ ${key}: ${Math.round(avg)}ms measured (probe: ${probeLocation})`);
       return { key, ms: Math.round(avg), measured: true };
     }
