@@ -1,10 +1,10 @@
 {
   "target": "nddev.dpdns.org",
-  "generatedAt": "2026-09-06T10:05:57.342Z",
+  "generatedAt": "2026-09-06T14:46:30.670Z",
   "source": "globalping.io + distance-based estimate fallback",
   "latencies": {
     "Brasov,Romania": {
-      "ms": 24,
+      "ms": 25,
       "measured": true
     },
     "Berlin,Germany": {
@@ -16,7 +16,7 @@
       "measured": true
     },
     "Paris,France": {
-      "ms": 10,
+      "ms": 1,
       "measured": true
     },
     "Madrid,Spain": {
@@ -28,7 +28,7 @@
       "measured": true
     },
     "Moscow,Russia": {
-      "ms": 40,
+      "ms": 39,
       "measured": true
     },
     "Cairo,Egypt": {
@@ -36,7 +36,7 @@
       "measured": true
     },
     "Abu Dhabi,UAE": {
-      "ms": 105,
+      "ms": 106,
       "measured": true
     },
     "New Delhi,India": {
@@ -48,11 +48,11 @@
       "measured": true
     },
     "Beijing,China": {
-      "ms": 157,
+      "ms": 112,
       "measured": true
     },
     "Tokyo,Japan": {
-      "ms": 1,
+      "ms": 2,
       "measured": true
     },
     "Seoul,South Korea": {
@@ -72,16 +72,16 @@
       "measured": true
     },
     "Brasilia,Brazil": {
-      "ms": 2,
-      "measured": true
+      "ms": 155,
+      "measured": false
     },
     "Buenos Aires,Argentina": {
-      "ms": 15,
+      "ms": 3,
       "measured": true
     },
     "Pretoria,South Africa": {
-      "ms": 126,
-      "measured": false
+      "ms": 1,
+      "measured": true
     }
   }
 }
