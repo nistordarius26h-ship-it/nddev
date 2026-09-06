@@ -1,7 +1,8 @@
-import gaAiRobotImg from "@/assets/ga-ai-robot.jpg";
+import gaAiRobotModel from "@/assets/ga-ai-robot.glb";
 import stallPredictionImg from "@/assets/stall-prediction-diagram.jpg";
 import esp32SnifferImg from "@/assets/esp32-sniffer.jpg";
 import { Image } from "@/components/ui/image";
+import { ModelViewer } from "./ModelViewer";
 import { WorldMap } from "./WorldMap";
 
 const GITHUB_URL = "https://github.com/nistordarius26h-ship-it";
@@ -96,7 +97,7 @@ export function Portfolio() {
                 </span>
               </div>
             </div>
-            <div className="lg:col-span-8">
+            <div className="lg:col-span-8 isolate relative">
               <WorldMap />
             </div>
           </div>
@@ -118,12 +119,11 @@ export function Portfolio() {
             {/* GAAI Robot */}
             <article id="gaairobot" className="group relative bg-[#050505] flex flex-col scroll-mt-24">
               <div className="relative aspect-[16/10] overflow-hidden bg-white/[0.02]">
-                <Image
-                  src={gaAiRobotImg}
-                  fittingType="fit"
-                  className="block w-full h-full object-contain"
-                  alt="GAAI Robot" />
-                
+                <ModelViewer
+                  path={gaAiRobotModel}
+                  className="absolute inset-0 w-full h-full"
+                />
+
                 <span className="pointer-events-none absolute top-3 right-3 mono text-[10px] text-white/60 tabular-nums bg-[#050505]/70 px-2 py-1">
                   #gaairobot
                 </span>

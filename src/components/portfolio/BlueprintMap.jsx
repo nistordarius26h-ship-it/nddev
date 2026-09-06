@@ -1,35 +1,69 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
+import {
+  PROFILE,
+  ABOUT,
+  PROJECTS,
+  SKILL_GROUPS,
+  GITHUB_URL,
+  LINKEDIN_URL,
+  CONTACT_EMAIL,
+} from "@/lib/portfolioData";
 
-// Radial "spiderweb" layout: ABYSS.SYS sits at the center, four primary
-// sections form a ring around it (also connected to each other, like a
-// web). Hold a title node to reveal its own mini-web of children in
-// place; release to collapse back — no need to close/reopen the overlay
-// to look around. PROJECTS is the exception: its children are real,
-// separately-navigable destinations, so they stay always visible.
+// A real family tree, entirely self-contained: ABYSS.SYS at the center,
+// four category nodes around it, and every leaf actually populated with
+// real data. Nothing here navigates back to the main page — the only
+// clickable nodes are ones that open a real external link (a project's
+// GitHub repo, or a contact method) in a new tab. Everything else is
+// purely informational.
 const CX = 500;
 const CY = 340;
 const RING_RADIUS = 150;
-const CHILD_RADIUS = 95;
 
 function polar(angleDeg, radius, cx = CX, cy = CY) {
   const rad = (angleDeg * Math.PI) / 180;
   return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
 }
 
+function angleFromHub(x, y) {
+  return (Math.atan2(y - CY, x - CX) * 180) / Math.PI;
+}
+
+// Spreads `count` children around `origin`, fanned across `spread`
+// degrees centered on `originAngle`, at `radius` from origin.
+function fan(origin, originAngle, count, spread, radius) {
+  if (count === 1) return [polar(originAngle, radius, origin.x, origin.y)];
+  const start = originAngle - spread / 2;
+  const step = spread / (count - 1);
+  return Array.from({ length: count }, (_, i) =>
+    polar(start + i * step, radius, origin.x, origin.y)
+  );
+}
+
+// --- Real repo URLs. Note: the "gaairobot" slug in portfolioData.js
+// doesn't match the actual repo name (ga_ai_robot) — corrected here. If
+// the other two slugs are also off, tell me the real ones and I'll fix
+// the source data too. ---
+const REPO_OVERRIDES = { gaairobot: "ga_ai_robot" };
+function repoUrl(project) {
+  const slug = REPO_OVERRIDES[project.repo] || project.repo;
+  return `${GITHUB_URL}/${slug}`;
+}
+
+const aboutParagraph = ABOUT.paragraphs?.[0] || "";
+
 const TITLES = [
-  { id: "top", label: "ABYSS.SYS", x: CX, y: CY, home: true },
+  { id: "top", label: PROFILE.handle || "ABYSS.SYS", x: CX, y: CY, home: true },
   {
     id: "logs",
     label: "ABOUT",
     angle: 180,
     ...polar(180, RING_RADIUS),
     children: [
-      { label: "AI & ROBOTICS ENGINEER", detail: "Hybrid AI-assisted engineering" },
-      { label: "10+ CERTIFICATIONS", detail: "Google, Harvard, IBM & more" },
-      { label: "BASED IN BRAȘOV", detail: "Romania" },
+      { label: PROFILE.name, detail: PROFILE.tagline },
+      { label: "BACKGROUND", detail: truncate(aboutParagraph, 46), wide: true },
     ],
   },
   {
@@ -37,24 +71,23 @@ const TITLES = [
     label: "PROJECTS",
     angle: 270,
     ...polar(270, RING_RADIUS),
-    alwaysShowChildren: true,
-    children: [
-      { id: "gaairobot", label: "GAAI ROBOT", detail: "Globally-controllable AI robot", nav: true },
-      { id: "aistallpredictionsystem", label: "STALL PREDICTION", detail: "Flight stall prediction model", nav: true },
-      { id: "esp32jamm", label: "ESP32 JAMM", detail: "Wireless signal research", nav: true },
-    ],
+    children: PROJECTS.map((p) => ({
+      label: p.title.toUpperCase(),
+      detail: truncate(p.description, 46),
+      href: repoUrl(p),
+      wide: true,
+    })),
   },
   {
     id: "skills",
     label: "SKILLS",
     angle: 0,
     ...polar(0, RING_RADIUS),
-    children: [
-      { label: "AI & DATA", detail: "Group 01" },
-      { label: "CLOUD & SECURITY", detail: "Group 02" },
-      { label: "PROFESSIONAL", detail: "Group 03" },
-      { label: "ENGINEERING & ROBOTICS", detail: "Group 04" },
-    ],
+    children: SKILL_GROUPS.map((g) => ({
+      label: g.title.toUpperCase(),
+      detail: `${g.skills.length} skills`,
+      skills: g.skills,
+    })),
   },
   {
     id: "contact",
@@ -62,8 +95,9 @@ const TITLES = [
     angle: 90,
     ...polar(90, RING_RADIUS),
     children: [
-      { label: "DIRECT MESSAGE", detail: "Open a channel" },
-      { label: "SOCIAL LINKS", detail: "External protocols" },
+      { label: "GITHUB", detail: "@" + GITHUB_URL.split("/").pop(), href: GITHUB_URL },
+      { label: "LINKEDIN", detail: "Connect", href: LINKEDIN_URL },
+      { label: "EMAIL", detail: CONTACT_EMAIL, href: "mailto:" + CONTACT_EMAIL },
     ],
   },
 ];
@@ -83,133 +117,29 @@ function titleById(id) {
   return TITLES.find((t) => t.id === id);
 }
 
-function childPositions(title) {
-  const count = title.children.length;
-  const spread = count > 1 ? 68 : 0;
-  const start = title.angle - spread / 2;
-  const step = count > 1 ? spread / (count - 1) : 0;
-  return title.children.map((child, i) => ({
-    ...child,
-    ...polar(start + i * step, CHILD_RADIUS, title.x, title.y),
-  }));
+function openExternal(href) {
+  window.open(href, "_blank", "noopener,noreferrer");
 }
 
-function TitleNode({ title, expanded, onExpand, onCollapse, onNavigate }) {
-  const timerRef = useRef(null);
-  const heldRef = useRef(false);
-  const holdable = !title.home && !title.alwaysShowChildren;
-
-  const startHold = (e) => {
-    e.preventDefault();
-    if (!holdable) return;
-    heldRef.current = false;
-    timerRef.current = setTimeout(() => {
-      heldRef.current = true;
-      onExpand(title.id);
-    }, 260);
-  };
-  const endHold = () => {
-    if (!holdable) {
-      onNavigate(title.id);
-      return;
-    }
-    clearTimeout(timerRef.current);
-    if (heldRef.current) {
-      onCollapse();
-      heldRef.current = false;
-    } else {
-      onNavigate(title.id);
-    }
-  };
-  const cancelHold = () => {
-    if (!holdable) return;
-    clearTimeout(timerRef.current);
-    if (heldRef.current) {
-      onCollapse();
-      heldRef.current = false;
-    }
-  };
-
-  return (
-    <g
-      className="mesh-node"
-      onPointerDown={startHold}
-      onPointerUp={endHold}
-      onPointerLeave={cancelHold}
-      onPointerCancel={cancelHold}
-      onContextMenu={(e) => e.preventDefault()}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onNavigate(title.id);
-      }}
-      aria-label={
-        holdable ? `${title.label} — click to open, hold to preview` : `Go to ${title.label}`
-      }
-    >
-      <circle
-        cx={title.x}
-        cy={title.y}
-        r={title.home ? 12 : 9}
-        className={`mesh-node-dot${title.home ? " mesh-node-home" : ""}${
-          expanded ? " mesh-node-active" : ""
-        }`}
-      />
-      <text x={title.x} y={title.y + 28} textAnchor="middle" className="mesh-node-label">
-        {title.label}
-      </text>
-    </g>
-  );
+function truncate(str, max) {
+  if (!str || str.length <= max) return str;
+  return str.slice(0, max - 1).trimEnd() + "…";
 }
 
 export function BlueprintMap({ open, onClose }) {
   const [closing, setClosing] = useState(false);
-  const [expandedId, setExpandedId] = useState(null);
-  const transformRef = useRef(null);
 
   useLockBodyScroll(open);
 
   useEffect(() => {
-    if (open) {
-      setClosing(false);
-      setExpandedId(null);
-    }
+    if (open) setClosing(false);
   }, [open]);
 
   if (!open) return null;
 
-  const expandTitle = (id) => {
-    setExpandedId(id);
-    try {
-      transformRef.current?.zoomToElement(`mesh-node-${id}`, 1.7, 280);
-    } catch (e) {
-      /* zoomToElement not available — expansion still renders, just no auto-zoom */
-    }
-  };
-
-  const collapseTitle = () => {
-    setExpandedId(null);
-    try {
-      transformRef.current?.resetTransform(280);
-    } catch (e) {
-      /* no-op */
-    }
-  };
-
-  const requestClose = (thenScrollToId) => {
+  const requestClose = () => {
     setClosing(true);
-    setTimeout(() => {
-      onClose();
-      if (thenScrollToId) {
-        // Wait a frame after unmount so body scroll is unlocked first —
-        // otherwise scrollIntoView can't animate and just jumps instantly.
-        requestAnimationFrame(() => {
-          document
-            .getElementById(thenScrollToId)
-            ?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-      }
-    }, 350);
+    setTimeout(onClose, 350);
   };
 
   return (
@@ -218,7 +148,7 @@ export function BlueprintMap({ open, onClose }) {
         closing ? "closing" : ""
       }`}
       role="dialog"
-      aria-label="Site schematic navigation"
+      aria-label="Site schematic"
     >
       <div className="blueprint-map-grid" />
 
@@ -227,7 +157,7 @@ export function BlueprintMap({ open, onClose }) {
           SYSTEM SCHEMATIC — SITE MESH
         </span>
         <button
-          onClick={() => requestClose()}
+          onClick={requestClose}
           className="text-white/60 hover:text-white transition-colors"
           aria-label="Close schematic view"
         >
@@ -237,10 +167,9 @@ export function BlueprintMap({ open, onClose }) {
 
       <div className="relative h-[calc(100%-3rem)] w-full">
         <TransformWrapper
-          ref={transformRef}
           initialScale={1}
-          minScale={0.6}
-          maxScale={4}
+          minScale={0.4}
+          maxScale={5}
           centerOnInit
           wheel={{ step: 0.15 }}
           pinch={{ step: 5 }}
@@ -251,29 +180,22 @@ export function BlueprintMap({ open, onClose }) {
             contentStyle={{ width: "100%", height: "100%" }}
           >
             <svg
-              viewBox="0 0 1000 680"
+              viewBox="0 0 1000 900"
               className="w-full h-full"
               role="img"
               aria-label="Diagram of site sections and projects"
             >
-              {/* Purely decorative web strands, for the spiderweb feel */}
+              {/* Decorative web strands */}
               <circle cx={CX} cy={CY} r={95} className="mesh-web-ring" />
               <circle cx={CX} cy={CY} r={215} className="mesh-web-ring" />
               {[45, 135, 225, 315].map((a) => {
                 const p = polar(a, 260);
                 return (
-                  <line
-                    key={a}
-                    x1={CX}
-                    y1={CY}
-                    x2={p.x}
-                    y2={p.y}
-                    className="mesh-web-thread"
-                  />
+                  <line key={a} x1={CX} y1={CY} x2={p.x} y2={p.y} className="mesh-web-thread" />
                 );
               })}
 
-              {/* Real (interactive) edges */}
+              {/* Level 1 ring edges */}
               {RING_EDGES.map(([fromId, toId], i) => {
                 const a = titleById(fromId);
                 const b = titleById(toId);
@@ -291,61 +213,102 @@ export function BlueprintMap({ open, onClose }) {
                 );
               })}
 
-              {/* Title nodes + their children */}
-              {TITLES.map((title) => {
-                const showChildren = title.alwaysShowChildren || expandedId === title.id;
-                const kids = title.children ? childPositions(title) : [];
-                return (
-                  <g key={title.id}>
-                    <g id={`mesh-node-${title.id}`}>
-                      <TitleNode
-                        title={title}
-                        expanded={expandedId === title.id}
-                        onExpand={expandTitle}
-                        onCollapse={collapseTitle}
-                        onNavigate={(id) => requestClose(id)}
-                      />
-                    </g>
+              {/* Level 1 title nodes (unclickable — pure organization) */}
+              {TITLES.map((title) => (
+                <g key={title.id} className="mesh-node mesh-node-inert">
+                  <circle
+                    cx={title.x}
+                    cy={title.y}
+                    r={title.home ? 12 : 9}
+                    className={`mesh-node-dot${title.home ? " mesh-node-home" : ""}`}
+                  />
+                  <text x={title.x} y={title.y + 28} textAnchor="middle" className="mesh-node-label">
+                    {title.label}
+                  </text>
+                </g>
+              ))}
 
-                    {showChildren &&
-                      kids.map((child, i) => (
-                        <g key={child.id || child.label}>
-                          <line
-                            x1={title.x}
-                            y1={title.y}
-                            x2={child.x}
-                            y2={child.y}
-                            pathLength="1"
-                            className="mesh-line mesh-line-child"
-                            style={{ animationDelay: `${i * 40}ms` }}
-                          />
-                          <g
-                            className="mesh-node mesh-node-child"
-                            style={{ animationDelay: `${80 + i * 40}ms` }}
-                            onClick={child.nav ? () => requestClose(child.id) : undefined}
-                            role={child.nav ? "button" : undefined}
-                            tabIndex={child.nav ? 0 : undefined}
-                            onKeyDown={
-                              child.nav
-                                ? (e) => {
-                                    if (e.key === "Enter" || e.key === " ") requestClose(child.id);
-                                  }
-                                : undefined
-                            }
-                            aria-label={child.nav ? `Go to ${child.label}` : undefined}
-                          >
-                            <circle cx={child.x} cy={child.y} r={5} className="mesh-node-dot mesh-node-dot-small" />
-                            <text x={child.x} y={child.y + 18} textAnchor="middle" className="mesh-node-label mesh-node-label-small">
-                              {child.label}
-                            </text>
-                            <text x={child.x} y={child.y + 30} textAnchor="middle" className="mesh-node-detail">
-                              {child.detail}
-                            </text>
+              {/* Level 2 children + their own level-3 grandchildren (skills only) */}
+              {TITLES.filter((t) => t.children).map((title) => {
+                const spread = Math.min(150, Math.max(50, title.children.length * 24));
+                const positions = fan(title, title.angle, title.children.length, spread, 100);
+
+                return title.children.map((child, i) => {
+                  const pos = positions[i];
+                  const clickable = !!child.href;
+                  const grandchildren = child.skills || [];
+                  const childAngle = angleFromHub(pos.x, pos.y);
+                  const gSpread = Math.min(160, Math.max(40, grandchildren.length * 16));
+                  const gPositions = grandchildren.length
+                    ? fan({ x: pos.x, y: pos.y }, childAngle, grandchildren.length, gSpread, 85)
+                    : [];
+
+                  return (
+                    <g key={`${title.id}-${child.label}`}>
+                      <line
+                        x1={title.x}
+                        y1={title.y}
+                        x2={pos.x}
+                        y2={pos.y}
+                        pathLength="1"
+                        className="mesh-line mesh-line-child"
+                        style={{ animationDelay: `${i * 40}ms` }}
+                      />
+                      <g
+                        className={`mesh-node ${clickable ? "" : "mesh-node-inert"}`}
+                        style={{ animationDelay: `${80 + i * 40}ms` }}
+                        onClick={clickable ? () => openExternal(child.href) : undefined}
+                        role={clickable ? "button" : undefined}
+                        tabIndex={clickable ? 0 : undefined}
+                        onKeyDown={
+                          clickable
+                            ? (e) => {
+                                if (e.key === "Enter" || e.key === " ") openExternal(child.href);
+                              }
+                            : undefined
+                        }
+                        aria-label={clickable ? `Open ${child.label}` : undefined}
+                      >
+                        <circle cx={pos.x} cy={pos.y} r={6} className="mesh-node-dot mesh-node-dot-small" />
+                        <text x={pos.x} y={pos.y + 18} textAnchor="middle" className="mesh-node-label mesh-node-label-small">
+                          {child.label}
+                        </text>
+                        <text
+                          x={pos.x}
+                          y={pos.y + 30}
+                          textAnchor="middle"
+                          className={`mesh-node-detail${child.wide ? " mesh-node-detail-wide" : ""}`}
+                        >
+                          {child.detail}
+                        </text>
+                      </g>
+
+                      {/* Level 3 — individual skills under each skill group */}
+                      {grandchildren.map((skill, gi) => {
+                        const gpos = gPositions[gi];
+                        return (
+                          <g key={skill}>
+                            <line
+                              x1={pos.x}
+                              y1={pos.y}
+                              x2={gpos.x}
+                              y2={gpos.y}
+                              pathLength="1"
+                              className="mesh-line mesh-line-grandchild"
+                              style={{ animationDelay: `${gi * 25}ms` }}
+                            />
+                            <g className="mesh-node mesh-node-inert" style={{ animationDelay: `${gi * 25}ms` }}>
+                              <circle cx={gpos.x} cy={gpos.y} r={3.5} className="mesh-node-dot mesh-node-dot-tiny" />
+                              <text x={gpos.x} y={gpos.y + 13} textAnchor="middle" className="mesh-node-label-tiny">
+                                {skill}
+                              </text>
+                            </g>
                           </g>
-                        </g>
-                      ))}
-                  </g>
-                );
+                        );
+                      })}
+                    </g>
+                  );
+                });
               })}
             </svg>
           </TransformComponent>
@@ -353,7 +316,7 @@ export function BlueprintMap({ open, onClose }) {
       </div>
 
       <div className="blueprint-map-titleblock mono">
-        DWG NO. ND-001 · REV A · CLICK TO OPEN · HOLD A TITLE TO PREVIEW · SCROLL/PINCH TO ZOOM
+        DWG NO. ND-001 · REV A · SCROLL/PINCH TO ZOOM · HIGHLIGHTED NODES OPEN EXTERNAL LINKS
       </div>
     </div>
   );
