@@ -90,7 +90,7 @@ export function WorldMap() {
             center={[30, 15]}
             zoom={2}
             minZoom={2}
-            scrollWheelZoom={false}
+            scrollWheelZoom={true}
             worldCopyJump
             className="h-full w-full abyss-map"
           >
@@ -111,7 +111,7 @@ export function WorldMap() {
                     <p className="uppercase tracking-widest text-white/80">
                       {loc.city}, {loc.country}
                     </p>
-                    <p className="mt-1 text-white/50">{loc.ms} ms · estimated</p>
+                    <p className="mt-1 text-white/50">{loc.ms} ms</p>
                   </div>
                 </Popup>
               </Marker>
@@ -129,7 +129,7 @@ export function WorldMap() {
                       <p className="uppercase tracking-widest text-white/80">
                         {loc.city}, {loc.country}
                       </p>
-                      <p className="mt-1 text-white/50">{loc.ms} ms · estimated</p>
+                      <p className="mt-1 text-white/50">{loc.ms} ms</p>
                     </div>
                   </Popup>
                 </Marker>

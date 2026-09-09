@@ -216,6 +216,38 @@ export function Portfolio() {
                 </a>
               </div>
             </article>
+
+            {/* ESP32-S3 Brucey */}
+            <article id="esp32s3brucey" className="group relative bg-[#050505] flex flex-col scroll-mt-24">
+              <div className="relative aspect-[16/10] overflow-hidden bg-white/[0.02] flex items-center justify-center">
+                <span className="mono text-[10px] uppercase tracking-[0.2em] text-white/25">
+                  No image yet
+                </span>
+                <span className="pointer-events-none absolute top-3 right-3 mono text-[10px] text-white/60 tabular-nums bg-[#050505]/70 px-2 py-1">
+                  #esp32s3brucey
+                </span>
+              </div>
+              <div className="flex flex-1 flex-col p-5 sm:p-6">
+                <h3 className="block font-heading font-semibold text-white text-lg sm:text-xl tracking-tight">
+                  ESP32-S3 Brucey
+                </h3>
+                <p className="block mt-3 flex-1 text-sm text-white/50 leading-relaxed">
+                  Custom ESP32-S3 handheld running adapted Bruce firmware, with
+                  CC1101, NRF24L01+, PN532, and SSD1306 OLED on a self-designed
+                  carrier PCB.
+                </p>
+                <SignalMeter level={3} />
+                <a
+                  href={`${GITHUB_URL}/esp32s3-brucey`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-5 inline-flex items-center gap-2 mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white/70 hover:text-white border-b hairline pb-1 w-fit transition-colors group-hover:border-white">
+                  
+                  View on GitHub
+                  <span className="transition-transform group-hover:translate-x-1">→</span>
+                </a>
+              </div>
+            </article>
           </div>
 
           {/* See more on GitHub */}

@@ -279,10 +279,16 @@ export function BlueprintMap({ open, onClose }) {
                   // exactly why the dense groups stayed cramped no matter
                   // how much I nudged one shared number.
                   const n = grandchildren.length;
-                  const gRadiusStep = 30 + n * 3;
-                  const gJitter = 9;
+                  // Straight lines instead of a jittered zigzag — each
+                  // group's skills sit in a single clean row extending
+                  // outward from the group, left-aligned text reading away
+                  // from the dot. Groups still diverge in different
+                  // directions so they don't cross each other, but each
+                  // one now reads as an organized list instead of a
+                  // scattered fan.
+                  const gRadiusStep = 62 + n * 5;
                   const gPositions = n
-                    ? spoke({ x: pos.x, y: pos.y }, childAngle, n, 55, gRadiusStep, gJitter)
+                    ? spoke({ x: pos.x, y: pos.y }, childAngle, n, 55, gRadiusStep, 0)
                     : [];
                   // Stagger alternating labels further out so adjacent
                   // siblings' text doesn't sit on the same line and overlap.
@@ -337,10 +343,12 @@ export function BlueprintMap({ open, onClose }) {
                         </text>
                       </g>
 
-                      {/* Level 3 — individual skills under each skill group */}
+                      {/* Level 3 — individual skills under each skill group,
+                          in a straight left-aligned row (all these spokes
+                          point generally rightward since SKILLS itself is
+                          due-east of the hub) */}
                       {grandchildren.map((skill, gi) => {
                         const gpos = gPositions[gi];
-                        const gStagger = (gi % 4) * 15;
                         return (
                           <g key={skill}>
                             <line
@@ -354,7 +362,7 @@ export function BlueprintMap({ open, onClose }) {
                             />
                             <g className="mesh-node mesh-node-inert" style={{ animationDelay: `${gi * 25}ms` }}>
                               <circle cx={gpos.x} cy={gpos.y} r={3.5} className="mesh-node-dot mesh-node-dot-tiny" />
-                              <text x={gpos.x} y={gpos.y + 13 + gStagger} textAnchor="middle" className="mesh-node-label-tiny">
+                              <text x={gpos.x + 9} y={gpos.y + 3} textAnchor="start" className="mesh-node-label-tiny">
                                 {skill}
                               </text>
                             </g>
