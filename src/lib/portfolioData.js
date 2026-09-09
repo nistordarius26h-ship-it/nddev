@@ -59,6 +59,13 @@ export const PROJECTS = [
     description:
       "ESP32-based research and signal tooling for controlled RF testing.",
   },
+  {
+    id: "esp32s3brucey",
+    title: "ESP32-S3 Brucey",
+    repo: "esp32s3-brucey",
+    description:
+      "Custom ESP32-S3 handheld running adapted Bruce firmware, with CC1101, NRF24L01+, PN532, and SSD1306 OLED on a self-designed carrier PCB.",
+  },
 ];
 
 export const SKILL_GROUPS = [
