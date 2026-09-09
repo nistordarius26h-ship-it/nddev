@@ -322,7 +322,10 @@ html {
 }
 .mesh-node-inert:hover .mesh-node-dot,
 .mesh-node-inert:hover .mesh-node-label {
-  fill: inherit;
+  fill: rgba(200, 220, 255, 0.8);
+}
+.mesh-node-inert:hover .mesh-node-dot {
+  fill: #050b16 !important;
 }
 
 .mesh-node-dot-tiny {
