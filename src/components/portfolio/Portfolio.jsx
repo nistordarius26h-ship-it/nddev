@@ -1,6 +1,7 @@
 import gaAiRobotModel from "@/assets/ga-ai-robot.glb";
 import stallPredictionImg from "@/assets/stall-prediction-diagram.jpg";
 import esp32SnifferImg from "@/assets/esp32-sniffer.jpg";
+import esp32s3BruceyImg from "@/assets/esp32s3-brucey.jpg";
 import { Image } from "@/components/ui/image";
 import { ModelViewer } from "./ModelViewer";
 import { WorldMap } from "./WorldMap";
@@ -219,10 +220,13 @@ export function Portfolio() {
 
             {/* ESP32-S3 Brucey */}
             <article id="esp32s3brucey" className="group relative bg-[#050505] flex flex-col scroll-mt-24">
-              <div className="relative aspect-[16/10] overflow-hidden bg-white/[0.02] flex items-center justify-center">
-                <span className="mono text-[10px] uppercase tracking-[0.2em] text-white/25">
-                  No image yet
-                </span>
+              <div className="relative aspect-[16/10] overflow-hidden bg-white/[0.02]">
+                <Image
+                  src={esp32s3BruceyImg}
+                  fittingType="fit"
+                  className="block w-full h-full object-contain"
+                  alt="ESP32-S3 Brucey" />
+                
                 <span className="pointer-events-none absolute top-3 right-3 mono text-[10px] text-white/60 tabular-nums bg-[#050505]/70 px-2 py-1">
                   #esp32s3brucey
                 </span>

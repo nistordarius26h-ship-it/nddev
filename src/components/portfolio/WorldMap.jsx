@@ -140,12 +140,9 @@ export function WorldMap() {
 
       {/* Info panel */}
       <div className="lg:col-span-4 bg-[#050505] p-6 sm:p-8 flex flex-col">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b hairline">
+        <div className="mb-6 pb-4 border-b hairline">
           <span className="mono text-[10px] uppercase tracking-[0.2em] text-white/50">
             [LATENCY MONITOR]
-          </span>
-          <span className="mono text-[10px] uppercase tracking-[0.2em] text-white/50">
-            ESTIMATED
           </span>
         </div>
 
